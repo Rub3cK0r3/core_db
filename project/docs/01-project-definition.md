@@ -1,6 +1,6 @@
 # 01-project-definition.md
 
-Project Name: SentinelDB
+Project Name: core-db
 
 One-line pitch: Self-hosted enterprise backend monitoring and alert platform.
 

@@ -2,7 +2,7 @@
 
 Acceptable:
 
-* [ ] Backend collects events reliably
+* [ ] Backend collects data reliably
 * [ ] RBAC enforced for all endpoints
 * [ ] Audit logs generated per action
 * [ ] Alerts trigger on configurable thresholds

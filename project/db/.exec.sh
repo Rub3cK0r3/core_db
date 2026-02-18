@@ -1,0 +1,3 @@
+## This is the command i executed to get going...
+## Author : rub3ck0r3
+sudo -u postgres psql -d core_db -f setup.sql
