@@ -13,10 +13,3 @@ def get_db():
 
 # TODOS:
 # The rest of endpoints on the MVP..
-
-# Make class implementation for a `data Collector`
-
-# Make class implementation for a `data Processor`
-
-# Make the CLI based alert system
-# with logs and audit store
