@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    container_name: db
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro # readonly
+
+volumes:
+  postgres_data:
+

@@ -1,17 +1,15 @@
--- This script is meant for creating the mock db so we can procceed with the rest
--- of the implementation..
+-- This script is meant for creating the mock db so we can procceed with the rest of the implementation..
+-- The only factor to consider is having installed and configured postgresql on your machine
+-- obviously all documentation available on : https://www.postgresql.org/
 
+-- This script is meant for creating the mock db so we can procceed with the rest of the implementation..
 -- The only factor to consider is having installed and configured postgresql on your machine
 -- obviously all documentation available on : https://www.postgresql.org/
 
 -- this is the part of the implementation that is recommended for secure database in production.
-DROP ROLE IF EXISTS app_owner;
+
+CREATE DATABASE core_db;
 CREATE ROLE app_owner NOLOGIN;
-
-DROP DATABASE IF EXISTS core_db;
-CREATE DATABASE core_db OWNER postgres;
-
-ALTER DATABASE core_db OWNER TO app_owner;
 
 -- user role for running the application as a normal user.
 DROP ROLE IF EXISTS app_user;
@@ -22,6 +20,10 @@ CREATE ROLE migrator LOGIN PASSWORD 'migrator123';
 -- monitor role for monitoring the system database.
 DROP ROLE IF EXISTS monitor;
 CREATE ROLE monitor LOGIN PASSWORD 'monitor123';
+
+DROP ROLE IF EXISTS tester;
+CREATE ROLE tester LOGIN PASSWORD 'tester123';
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO tester;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_user;
