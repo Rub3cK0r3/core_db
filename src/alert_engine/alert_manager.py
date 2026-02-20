@@ -1,35 +1,43 @@
-import os
-import psycopg2
 import json
 import select
-from urllib.parse import quote_plus
-
+from core.db.db_connection import DBConnection
 class AlertManager:
-    def __init__(self):
-        self.conn = psycopg2.connect(
-            host=os.environ.get("DB_HOST", "db"),
-            database=os.environ.get("POSTGRES_DB", "coredb"),
-            user=os.environ.get("POSTGRES_USER", "devuser"),
-            password=quote_plus(os.environ.get("POSTGRES_PASSWORD", "devpass"))
-        )
-        self.conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-        self.cur = self.conn.cursor()
-        self.cur.execute("LISTEN canal_eventos;")
+    def __init__(self, channel: str = "canal_eventos"):
+        # Use your DBConnection class
+        self.db = DBConnection(channel=channel)
+        self.conn = self.db.conn
 
     def start(self):
-        print("AlertManager listening on canal_eventos...")
+        print(f"AlertManager listening on channel '{self.db.channel}'...")
         while True:
-            if select.select([self.conn], [], [], 5) == ([], [], []):
-                continue
-            self.conn.poll()
-            while self.conn.notifies:
-                notify = self.conn.notifies.pop(0)
-                self.process_event(json.loads(notify.payload))
+            try:
+                # Wait up to 5 seconds for DB notifications
+                if select.select([self.conn], [], [], 5) == ([], [], []):
+                    continue
 
-    def process_event(self, event):
-        # Ejemplo simple: alertar si severity es error o fatal
+                self.conn.poll()
+
+                while self.conn.notifies:
+                    notify = self.conn.notifies.pop(0)
+                    try:
+                        event = json.loads(notify.payload)
+                        self.process_event(event)
+                    except json.JSONDecodeError:
+                        print("Invalid payload:", notify.payload)
+
+            except Exception as e:
+                print("AlertManager error:", e)
+                # Reconnect if connection is lost
+                self.db.connect()
+                self.conn = self.db.conn  # refresh reference
+
+    def process_event(self, event: dict) -> None:
+        # Example: alert if severity is error or fatal
         if event.get("severity") in ("error", "fatal"):
-            print(f"ALERT: {event.get('id')} - {event.get('severity')} on {event.get('resource')}")
+            print(
+                f"ALERT: {event.get('id')} - {event.get('severity')} on {event.get('resource')}"
+            )
+
 
 if __name__ == "__main__":
     am = AlertManager()

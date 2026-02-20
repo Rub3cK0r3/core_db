@@ -1,39 +1,35 @@
 # class to manage the processor implementation
-import os
-import psycopg2
 import json
-from urllib.parse import quote_plus
 import select
-
+from core.db.db_connection import DBConnection
 class Processor:
     def __init__(self):
-        self.conn = psycopg2.connect(
-            host=os.environ.get("DB_HOST", "db"),
-            database=os.environ.get("POSTGRES_DB", "coredb"),
-            user=os.environ.get("POSTGRES_USER", "devuser"),
-            password=quote_plus(os.environ.get("POSTGRES_PASSWORD", "devpass"))
-        )
-        self.conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-        self.cur = self.conn.cursor()
-        self.cur.execute("LISTEN canal_eventos;")
+        self.db_connection = DBConnection()
+        self.conn = self.db_connection.conn
 
     def start(self):
         print("Processor listening...")
         while True:
-            if select.select([self.conn], [], [], 5) == ([], [], []):
-                continue
-            self.conn.poll()
-            while self.conn.notifies:
-                notify = self.conn.notifies.pop(0)
-                event = json.loads(notify.payload)
-                self.process_event(event)
+            try:
+                if select.select([self.conn], [], [], 5) == ([], [], []):
+                    continue
 
-    def process_event(self, event):
-        # Ejemplo: enriquecer y guardar en otra tabla
-        print(f"Processing {event['id']} from {event.get('app_name')}")
+                self.conn.poll()
 
+                while self.conn.notifies:
+                    notify = self.conn.notifies.pop(0)
 
-if __name__ == "__main__":
-    processor = Processor()
-    processor.start()
+                    try:
+                        event = json.loads(notify.payload)
+                        self.process_event(event)
+                    except json.JSONDecodeError:
+                        print("Invalid payload:", notify.payload)
+
+            except Exception as e:
+                print("Processor error:", e)
+                self.db_connection.connect()
+                self.conn = self.db_connection.conn
+
+    def process_event(self, event: dict) -> None:
+        print(f"Processing {event.get('id')} from {event.get('app_name')}")
 

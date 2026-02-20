@@ -1,0 +1,42 @@
+import psycopg2
+from psycopg2.extensions import connection, cursor
+import os
+import time
+from urllib.parse import quote_plus
+
+class DBConnection:
+    conn: connection
+    cur: cursor
+
+    def __init__(self, channel: str = "event_channel") -> None:
+        self.channel = channel
+        self.conn, self.cur = self._connect_with_retry()
+
+    def _create_connection(self) -> connection:
+        conn = psycopg2.connect(
+            host=os.environ.get("DB_HOST", "db"),
+            database=os.environ.get("POSTGRES_DB", "coredb"),
+            user=os.environ.get("POSTGRES_USER", "devuser"),
+            password=quote_plus(os.environ.get("POSTGRES_PASSWORD", "devpass")),
+        )
+        conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+        return conn
+
+    def _listen(self, conn: connection) -> cursor:
+        cur = conn.cursor()
+        cur.execute(f"LISTEN {self.channel};")
+        return cur
+
+    def _connect_with_retry(self) -> tuple[connection, cursor]:
+        while True:
+            try:
+                conn = self._create_connection()
+                cur = self._listen(conn)
+                return conn, cur
+            except Exception as e:
+                print("DBConnection ERROR:", e)
+                time.sleep(5)
+
+    def reconnect(self) -> None:
+        self.conn, self.cur = self._connect_with_retry()
+
