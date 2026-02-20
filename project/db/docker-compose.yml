@@ -12,7 +12,7 @@ services:
 
   backend:
     build: ../src/backend
-    container_name: core-backend
+    container_name: backend
     env_file:
       - .env
     ports:
