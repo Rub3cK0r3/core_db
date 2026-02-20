@@ -1,4 +1,4 @@
-# Son fundamentales en FastAPI para validar solicitudes/respuestas, garantizando la integridad de los datos y generando esquemas JSON.
+# They are essential in FastAPI validation requests/responses, for data integrity parse JSON,...
 
 from typing import Dict, Optional
 from pydantic import BaseModel
@@ -26,9 +26,8 @@ class EventResponse(BaseModel):
     endpoint_country: Optional[str] = None
     endpoint_user_agent: Optional[str] = None
     endpoint_device_type: Optional[str] = None
-
     model_config = {
-        "from_attributes": True  # reemplaza orm_mode
+        "from_attributes": True 
     }
 
 class EventCreate(BaseModel):

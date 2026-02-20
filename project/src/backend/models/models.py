@@ -11,30 +11,18 @@ from .base import Base
 
 class Event(Base):
     __tablename__ = "events"
-
-    # Primary key
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
-
-    # Core event data
     severity: Mapped[str] = mapped_column(String(10), nullable=False)
     stack: Mapped[str | None] = mapped_column(Text)
     type: Mapped[str | None] = mapped_column(String(100))
-
     timestamp: Mapped[int] = mapped_column(BigInteger, nullable=False)
     received_at: Mapped[int] = mapped_column(BigInteger, nullable=False)
-
     resource: Mapped[str | None] = mapped_column(Text)
     referrer: Mapped[str | None] = mapped_column(Text)
-
-    # App metadata
     app_name: Mapped[str] = mapped_column(String(255), nullable=False)
     app_version: Mapped[str | None] = mapped_column(String(50))
     app_stage: Mapped[str | None] = mapped_column(String(50))
-
-    # JSON tags
     tags: Mapped[dict | None] = mapped_column(JSONB)
-
-    # Endpoint / client info
     endpoint_id: Mapped[str] = mapped_column(String(64), nullable=False)
     endpoint_language: Mapped[str | None] = mapped_column(String(10))
     endpoint_platform: Mapped[str | None] = mapped_column(String(50))

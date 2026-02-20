@@ -3,7 +3,7 @@ services:
     image: postgres:16
     container_name: db
     env_file:
-      - .env
+      - .env # i will use the same .env located here for the rest of the implementations => data integrity
     ports:
       - "5432:5432" # HOST_PORT : CONTAINER_PORT
     volumes:
@@ -16,9 +16,9 @@ services:
     env_file:
       - .env
     ports:
-      - "8000:8000"
+      - "8000:8000" # For now in development everything is set in local
     depends_on:
-      - db
+      - db # The rest of the implementations depend also on the database
 
 volumes:
   postgres_data:

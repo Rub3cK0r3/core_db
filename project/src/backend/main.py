@@ -1,15 +1,24 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import SQLModel, Session, select
 from database import engine
+# This is the type that will be saved in the db
 from models.models import Event
+# I import the serializers to transform data in the required type backend needs
 from models.schemas import EventResponse,EventCreate
 from typing import List
 
 app = FastAPI()
 
-# Crear tablas (solo desarrollo)
-SQLModel.metadata.create_all(engine)
+"""
+Warning:
+    This backend implementation
+    is just mock, the real part of 
+    the Validation is done in the other
+    more crucial parts, such as the processor.
+"""
 
+# Create tables (development)
+SQLModel.metadata.create_all(engine)
 
 def get_db():
     with Session(engine) as session:
@@ -34,6 +43,7 @@ def get_event(event_id: str, db: Session = Depends(get_db)):
     return event
 
 # POST => It just adds the given event
+# Validation and the different processes will be done in the processor
 @app.post("/v1/events", response_model=EventResponse)
 def create_event(payload: EventCreate, db: Session = Depends(get_db)):
     db.add(Event(**payload.dict()))
