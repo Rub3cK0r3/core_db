@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import SQLModel, Session, select
 from database import engine
-from models.events import Event,EventResponse,EventCreate
+from models.models import Event
+from models.schemas import EventResponse,EventCreate
 from typing import List
 
 app = FastAPI()
