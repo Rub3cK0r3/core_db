@@ -1,11 +1,10 @@
-# class to manage the processor implementation
 import os
 import psycopg2
 import json
-from urllib.parse import quote_plus
 import select
+from urllib.parse import quote_plus
 
-class Processor:
+class AlertManager:
     def __init__(self):
         self.conn = psycopg2.connect(
             host=os.environ.get("DB_HOST", "db"),
@@ -18,22 +17,21 @@ class Processor:
         self.cur.execute("LISTEN canal_eventos;")
 
     def start(self):
-        print("Processor listening...")
+        print("AlertManager listening on canal_eventos...")
         while True:
             if select.select([self.conn], [], [], 5) == ([], [], []):
                 continue
             self.conn.poll()
             while self.conn.notifies:
                 notify = self.conn.notifies.pop(0)
-                event = json.loads(notify.payload)
-                self.process_event(event)
+                self.process_event(json.loads(notify.payload))
 
     def process_event(self, event):
-        # Ejemplo: enriquecer y guardar en otra tabla
-        print(f"Processing {event['id']} from {event.get('app_name')}")
-
+        # Ejemplo simple: alertar si severity es error o fatal
+        if event.get("severity") in ("error", "fatal"):
+            print(f"ALERT: {event.get('id')} - {event.get('severity')} on {event.get('resource')}")
 
 if __name__ == "__main__":
-    processor = Processor()
-    processor.start()
+    am = AlertManager()
+    am.start()
 
