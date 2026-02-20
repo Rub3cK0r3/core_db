@@ -1,4 +1,4 @@
-#!/home/ruben/Desktop/core-db/project/src/venv/bin/python3
+#!/home/ruben/Desktop/core-db/project/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
