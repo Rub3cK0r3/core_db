@@ -1,10 +1,10 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import SQLModel, Session, select
-from database import engine
+from .database import engine
 # This is the type that will be saved in the db
-from models.models import Event
+from backend.models.models import Event
 # I import the serializers to transform data in the required type backend needs
-from models.schemas import EventResponse,EventCreate
+from backend.models.schemas import EventResponse,EventCreate
 from typing import List
 
 app = FastAPI()

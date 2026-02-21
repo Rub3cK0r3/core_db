@@ -2,15 +2,49 @@ services:
   db:
     image: postgres:16
     container_name: db
-    env_file:
-      - .env # i will use the same .env located here for the rest of the implementations => data integrity
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: coredb
     ports:
-      - "5432:5432" # HOST_PORT : CONTAINER_PORT
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d:ro # readonly
+      - ../db/init-scripts:/docker-entrypoint-initdb.d
 
-volumes: 
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/docker/Backend.Dockerfile
+    container_name: deploy-backend
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+  collector:
+    build:
+      context: ..
+      dockerfile: deploy/docker/Collector.Dockerfile
+    container_name: deploy-collector
+    depends_on:
+      - db
+
+  processor:
+    build:
+      context: ..
+      dockerfile: deploy/docker/Processor.Dockerfile
+    container_name: deploy-processor
+    depends_on:
+      - db
+
+  alert_engine:
+    build:
+      context: ..
+      dockerfile: deploy/docker/AlertEngine.Dockerfile
+    container_name: deploy-alert_engine
+    depends_on:
+      - db
+
+volumes:
   postgres_data:
-
-# Author : rub3ck0r3
