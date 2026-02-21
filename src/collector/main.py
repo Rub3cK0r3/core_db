@@ -1,11 +1,3 @@
-# class to manage the collector implementation
-# It behaves like a queue of operations to do related to the 
-# db, think it throught
-
-# It gets the entrances requests to the db and collect them in the process
-# to pass them to the processor
-
-# At the end of the day this is a traffic proxy db
 import json
 import select
 from core.db.db_connection import DBConnection

@@ -1,4 +1,0 @@
-.env
-.pgpass
-*.log
-*.sql~
