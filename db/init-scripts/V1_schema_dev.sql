@@ -116,6 +116,15 @@ INSERT INTO events (
  'uuid-5566-7788-9900', 'fr-FR', 'MacIntel', 'MacOS', '13.0',
  'Chrome', '110.0.5481.178', 'FR', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_0)...', 'Desktop');
 
+CREATE TABLE IF NOT EXISTS alerts (
+    id VARCHAR(64) PRIMARY KEY,
+    severity VARCHAR(10) NOT NULL,
+    resource TEXT,
+    payload JSON,
+    created_at BIGINT NOT NULL
+);
+
+
 -- i watch the data after i insert it..
 SELECT * FROM events; 
 

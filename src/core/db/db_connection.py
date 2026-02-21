@@ -14,7 +14,7 @@ class DBConnection:
 
     def _create_connection(self) -> connection:
         conn = psycopg2.connect(
-            host=os.environ.get("DB_HOST", "db"),
+            host=os.environ.get("DB_HOST", "127.0.0.1"), # change to db for docker
             database=os.environ.get("POSTGRES_DB", "coredb"),
             user=os.environ.get("POSTGRES_USER", "devuser"),
             password=quote_plus(os.environ.get("POSTGRES_PASSWORD", "devpass")),
@@ -39,4 +39,22 @@ class DBConnection:
 
     def reconnect(self) -> None:
         self.conn, self.cur = self._connect_with_retry()
+
+    def close(self) -> None:
+        try:
+            if hasattr(self, 'cur') and self.cur is not None:
+                self.cur.close()
+            if hasattr(self, 'conn') and self.conn is not None:
+                self.conn.close()
+            print("DBConnection closed successfully.")
+        except Exception as e:
+            print("Error closing DBConnection:", e)
+
+if __name__ == "__main__":
+    print("Testing DB connection...")
+    db = DBConnection()
+    print("Connected to DB:", db.conn)
+    db.cur.execute("SELECT version();")
+    version = db.cur.fetchone()
+    print("PostgreSQL version:", version)
 

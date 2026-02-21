@@ -1,71 +1,16 @@
 services:
   db:
     image: postgres:16
+    container_name: db
     env_file:
-      - .env
+      - .env # i will use the same .env located here for the rest of the implementations => data integrity
     ports:
-      - "5432:5432"
+      - "5432:5432" # HOST_PORT : CONTAINER_PORT
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../db/init-scripts:/docker-entrypoint-initdb.d:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
-      interval: 5s
-      retries: 5
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro # readonly
 
-  backend:
-    build:
-      context: ..
-      dockerfile: deploy/docker/Dockerfile
-    command: python -m backend.main
-    env_file:
-      - .env
-    ports:
-      - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-
-  collector:
-    build:
-      context: ..
-      dockerfile: deploy/docker/Dockerfile
-    command: python -m collector.collector
-    env_file:
-      - .env
-    ports:
-      - "8001:8001"
-    depends_on:
-      db:
-        condition: service_healthy
-
-  processor:
-    build:
-      context: ..
-      dockerfile: deploy/docker/Dockerfile
-    command: python -m processor.processor
-    env_file:
-      - .env
-    ports:
-      - "8002:8002"
-    depends_on:
-      db:
-        condition: service_healthy
-
-  alert_manager:
-    build:
-      context: ..
-      dockerfile: deploy/docker/Dockerfile
-    command: python -m alert_engine.alert_manager
-    env_file:
-      - .env
-    ports:
-      - "8003:8003"
-    depends_on:
-      db:
-        condition: service_healthy
-
-volumes:
+volumes: 
   postgres_data:
 
 # Author : rub3ck0r3
