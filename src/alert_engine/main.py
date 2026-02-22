@@ -1,116 +1,96 @@
+import asyncio
+import asyncpg
 import json
-import select
-import threading
-import queue
-import time
-from core.db.db_connection import DBConnection
+import signal
 
-# Campos mínimos requeridos en alert
 REQUIRED_ALERT_FIELDS = ["id", "severity", "resource"]
 
-class AlertManager:
-    def __init__(self, channel: str = "canal_eventos", max_queue_size=1000, worker_count=2):
-        self.db = DBConnection(channel=channel)
-        self.conn = self.db.conn
+class AsyncAlertManager:
+    def __init__(self, db_dsn, channel="canal_eventos", max_queue_size=1000, worker_count=2):
+        self.db_dsn = db_dsn
         self.channel = channel
-        self.running = False
-
-        self.event_queue = queue.Queue(maxsize=max_queue_size)
-        self.worker_threads = []
+        self.queue = asyncio.Queue(maxsize=max_queue_size)
         self.worker_count = worker_count
-        self.shutdown_event = threading.Event()
-        self.listener_thread = None
+        self.workers = []
+        self.listener_task = None
+        self.db_pool = None
+        self.shutdown_event = asyncio.Event()
 
     # =========================
     # START
     # =========================
-    def start(self):
-        self.running = True
+    async def start(self):
+        # Crear pool de DB
+        self.db_pool = await asyncpg.create_pool(dsn=self.db_dsn)
+        print(f"DB pool created for channel '{self.channel}' with {self.worker_count} workers.")
 
-        # Thread de escucha
-        self.listener_thread = threading.Thread(target=self._listen_loop, daemon=True)
-        self.listener_thread.start()
+        # Lanzar listener async
+        self.listener_task = asyncio.create_task(self._listener_loop())
 
-        # Workers que procesan la cola
+        # Lanzar workers async
         for _ in range(self.worker_count):
-            t = threading.Thread(target=self._worker_loop, daemon=True)
-            t.start()
-            self.worker_threads.append(t)
+            worker_task = asyncio.create_task(self._worker_loop())
+            self.workers.append(worker_task)
 
-        print(f"AlertManager started on channel '{self.channel}' with {self.worker_count} worker(s).")
+        print("AsyncAlertManager started.")
 
     # =========================
-    # LISTEN LOOP
+    # LISTENER LOOP (PostgreSQL NOTIFY)
     # =========================
-    def _listen_loop(self):
-        while self.running:
+    async def _listener_loop(self):
+        while not self.shutdown_event.is_set():
             try:
-                rlist, _, _ = select.select([self.conn], [], [], 5)
-                if not rlist:
-                    continue
-
-                self.conn.poll()
-
-                # Encolar todas las notificaciones
-                for notify in self.conn.notifies:
-                    try:
-                        event = json.loads(notify.payload)
-
-                        if not self._validate_alert(event):
-                            print("Invalid alert, skipping:", event)
-                            continue
-
-                        self.event_queue.put_nowait(event)
-
-                    except json.JSONDecodeError:
-                        print("Invalid JSON payload:", notify.payload)
-                    except queue.Full:
-                        print("Queue full, dropping alert")
-
-                self.conn.notifies.clear()
-
+                async with self.db_pool.acquire() as conn:
+                    # Escuchar canal de alertas
+                    await conn.add_listener(self.channel, self._notify_callback)
+                    while not self.shutdown_event.is_set():
+                        await asyncio.sleep(1)  # mantener loop activo
             except Exception as e:
-                print("AlertManager listener error:", e)
-                self._reconnect()
+                print("Listener error:", e)
+                await asyncio.sleep(2)  # reconexión lenta
 
     # =========================
-    # WORKER LOOP
+    # CALLBACK por cada notificación
     # =========================
-    def _worker_loop(self):
-        # Cada worker crea su propia conexión DB
-        worker_db = DBConnection(channel=self.channel)
-        conn = worker_db.conn
+    def _notify_callback(self, connection, pid, channel, payload):
+        try:
+            event = json.loads(payload)
+            if not self._validate_alert(event):
+                print("Invalid alert, skipping:", event)
+                return
+            # Encolar evento sin bloquear
+            asyncio.create_task(self.queue.put(event))
+        except json.JSONDecodeError:
+            print("Invalid JSON payload:", payload)
 
-        while not self.shutdown_event.is_set() or not self.event_queue.empty():
+    # =========================
+    # WORKER LOOP (async)
+    # =========================
+    async def _worker_loop(self):
+        while not self.shutdown_event.is_set() or not self.queue.empty():
             try:
-                event = self.event_queue.get(timeout=1)
-                self._process_alert(event, worker_db)
-                self.event_queue.task_done()
-
-            except queue.Empty:
+                event = await asyncio.wait_for(self.queue.get(), timeout=1)
+                await self._process_alert(event)
+                self.queue.task_done()
+            except asyncio.TimeoutError:
                 continue
             except Exception as e:
                 print("Worker error:", e)
 
-        worker_db.close()
-        print("Worker thread exiting.")
-
     # =========================
     # Procesamiento de alertas
     # =========================
-    def _process_alert(self, event, db_instance):
+    async def _process_alert(self, event):
         try:
             # Solo alertas críticas
             if event.get("severity") in ("error", "fatal"):
-                with db_instance.conn:  # transacción segura
-                    cursor = db_instance.conn.cursor()
-                    cursor.execute(
-                        "INSERT INTO alerts (id, severity, resource, payload) VALUES (%s, %s, %s, %s)",
-                        (event["id"], event["severity"], event["resource"], json.dumps(event))
-                    )
-                    cursor.close()
+                async with self.db_pool.acquire() as conn:
+                    async with conn.transaction():
+                        await conn.execute(
+                            "INSERT INTO alerts (id, severity, resource, payload) VALUES ($1, $2, $3, $4)",
+                            event["id"], event["severity"], event["resource"], json.dumps(event)
+                        )
                 print(f"ALERT: {event['id']} - {event['severity']} on {event['resource']}")
-
         except Exception as e:
             print(f"DB write failed for alert {event.get('id')}: {e}")
 
@@ -121,53 +101,49 @@ class AlertManager:
         return all(field in event for field in REQUIRED_ALERT_FIELDS)
 
     # =========================
-    # Reconexión
-    # =========================
-    def _reconnect(self):
-        print("Attempting reconnection...")
-        time.sleep(2)
-        try:
-            self.db.connect()
-            self.conn = self.db.conn
-            print("Reconnected successfully.")
-        except Exception as e:
-            print("Reconnect failed:", e)
-
-    # =========================
     # GRACEFUL SHUTDOWN
     # =========================
-    def stop(self):
+    async def stop(self):
         print("AlertManager stopping...")
-        self.running = False
         self.shutdown_event.set()
 
-        if self.listener_thread:
-            self.listener_thread.join(timeout=2)
+        # Esperar que la cola se drene
+        await self.queue.join()
 
-        # Drenar cola
-        self.event_queue.join()
+        # Cancelar listener
+        if self.listener_task:
+            self.listener_task.cancel()
+            try:
+                await self.listener_task
+            except asyncio.CancelledError:
+                pass
 
-        # Esperar workers
-        for t in self.worker_threads:
-            t.join(timeout=2)
+        # Cancelar workers
+        for w in self.workers:
+            w.cancel()
+        await asyncio.gather(*self.workers, return_exceptions=True)
 
-        self.db.close()
+        # Cerrar pool DB
+        await self.db_pool.close()
         print("AlertManager stopped gracefully.")
 
 
 # =========================
 # MAIN
 # =========================
-if __name__ == "__main__":
-    am = AlertManager(worker_count=2)
-    am.start()
+async def main():
+    alert_manager = AsyncAlertManager(db_dsn="postgres://user:pass@localhost/db", worker_count=2)
+    await alert_manager.start()
 
-    try:
-        while True:
-            cmd = input("Type 'quit' to stop: ")
-            if cmd.strip().lower() == "quit":
-                am.stop()
-                break
-    except KeyboardInterrupt:
-        am.stop()
+    # Manejar SIGINT/SIGTERM para shutdown
+    loop = asyncio.get_running_loop()
+    stop_event = asyncio.Event()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, stop_event.set)
+
+    await stop_event.wait()
+    await alert_manager.stop()
+
+if __name__ == "__main__":
+    asyncio.run(main())
 
