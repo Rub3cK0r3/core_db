@@ -6,6 +6,23 @@ import signal
 REQUIRED_EVENT_FIELDS = ["id", "app_name", "type", "payload"]
 
 class AsyncProcessor:
+    """
+    Manages asynchronous collection and processing of events from PostgreSQL.
+
+    Uses:
+    - A listener that subscribes to the 'events_channel' notifications.
+    - An asyncio queue to store incoming events.
+    - Asynchronous workers that process events and insert them into the database.
+
+    Attributes:
+        db_dsn (str): PostgreSQL database connection string (DSN).
+        queue (asyncio.Queue): Queue to hold incoming events.
+        worker_count (int): Number of concurrent workers processing events.
+        workers (list): List of active worker tasks.
+        listener_task (asyncio.Task): Task running the event listener.
+        db_pool (asyncpg.pool.Pool): Connection pool to PostgreSQL.
+        shutdown_event (asyncio.Event): Event to signal graceful shutdown.
+    """
     def __init__(self, db_dsn, max_queue_size=1000, worker_count=4):
         self.db_dsn = db_dsn
         self.queue = asyncio.Queue(maxsize=max_queue_size)
@@ -17,6 +34,12 @@ class AsyncProcessor:
 
     # START
     async def start(self):
+        """
+        Initializes the AsyncProcessor:
+            - Creates the database connection pool.
+            - Starts the asynchronous listener for 'events_channel'.
+            - Launches worker tasks that process events from the queue.
+        """
         # Crear pool de DB
         self.db_pool = await asyncpg.create_pool(dsn=self.db_dsn)
         print(f"DB pool created with {self.worker_count} workers.")
@@ -33,6 +56,11 @@ class AsyncProcessor:
 
     # LISTENER LOOP (PostgreSQL NOTIFY)
     async def _listener_loop(self):
+        """
+        Asynchronous loop that keeps the PostgreSQL listener active.
+            Registers `_notify_callback` for each NOTIFY event received from
+            the 'events_channel'. Handles retry in case of listener errors.
+        """
         while not self.shutdown_event.is_set():
             try:
                 async with self.db_pool.acquire() as conn:
@@ -46,6 +74,17 @@ class AsyncProcessor:
 
     # CALLBACK por cada notificación
     def _notify_callback(self, connection, pid, channel, payload):
+        """
+        Callback triggered by PostgreSQL NOTIFY events.
+
+        Parses the JSON payload, validates the event, and enqueues it for processing.
+
+        Args:
+              - connection: PostgreSQL connection that received the notification.
+              - pid (int): Backend PID that sent the notification.
+              - channel (str): Name of the channel that sent the notification.
+              - payload (str): Received JSON message.
+        """
         try:
             event = json.loads(payload)
             if not self._validate_event(event):
@@ -58,6 +97,13 @@ class AsyncProcessor:
 
     # WORKER LOOP (async)
     async def _worker_loop(self):
+        """
+        Asynchronous loop for a worker that processes events from the queue.
+
+        Retrieves events from `self.queue`, processes them via `_process_event_db`,
+        and marks the queue task as done. Continues until shutdown event is set
+        and the queue is empty.
+        """
         while not self.shutdown_event.is_set() or not self.queue.empty():
             try:
                 event = await asyncio.wait_for(self.queue.get(), timeout=1)
@@ -70,6 +116,11 @@ class AsyncProcessor:
 
     # Procesamiento de eventos
     async def _process_event_db(self, event):
+        """
+        Inserts an event into the 'events' table in the database using a transaction.
+        Args:
+         - event (dict): Event dictionary containing 'id', 'app_name', 'type', and 'payload'.
+        """
         try:
             async with self.db_pool.acquire() as conn:
                 async with conn.transaction():
@@ -83,10 +134,25 @@ class AsyncProcessor:
 
     # Validación mínima
     def _validate_event(self, event):
+        """
+        Validates that an event contains all required fields.
+        Args:
+            event (dict): Event to validate.
+        Returns:
+            bool: True if all required fields ('id', 'app_name', 'type', 'payload') are present,
+            False otherwise.
+        """
         return all(field in event for field in REQUIRED_EVENT_FIELDS)
 
     # GRACEFUL SHUTDOWN
     async def stop(self):
+        """
+        Performs a graceful shutdown of the AsyncProcessor:
+            - Signals listener and worker loops to stop.
+            - Waits for the queue to drain.
+            - Cancels listener and worker tasks.
+            - Closes the database connection pool.
+        """
         print("Processor stopping...")
         self.shutdown_event.set()
 
@@ -111,6 +177,13 @@ class AsyncProcessor:
         print("Processor stopped gracefully.")
 
 async def main():
+    """
+    Example entry point for running the AsyncProcessor.
+
+    - Initializes the processor with PostgreSQL DSN and worker count.
+    - Starts the processor.
+    - Handles SIGINT/SIGTERM signals for graceful shutdown.
+    """
     processor = AsyncProcessor(db_dsn="postgres://user:pass@localhost/db", worker_count=4)
     await processor.start()
 
