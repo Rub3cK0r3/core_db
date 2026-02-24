@@ -15,9 +15,7 @@ class AsyncProcessor:
         self.db_pool = None
         self.shutdown_event = asyncio.Event()
 
-    # =========================
     # START
-    # =========================
     async def start(self):
         # Crear pool de DB
         self.db_pool = await asyncpg.create_pool(dsn=self.db_dsn)
@@ -33,9 +31,7 @@ class AsyncProcessor:
 
         print("AsyncProcessor started.")
 
-    # =========================
     # LISTENER LOOP (PostgreSQL NOTIFY)
-    # =========================
     async def _listener_loop(self):
         while not self.shutdown_event.is_set():
             try:
@@ -48,9 +44,7 @@ class AsyncProcessor:
                 print("Listener error:", e)
                 await asyncio.sleep(2)  # Retry lento
 
-    # =========================
     # CALLBACK por cada notificación
-    # =========================
     def _notify_callback(self, connection, pid, channel, payload):
         try:
             event = json.loads(payload)
@@ -62,9 +56,7 @@ class AsyncProcessor:
         except json.JSONDecodeError:
             print("Invalid JSON payload:", payload)
 
-    # =========================
     # WORKER LOOP (async)
-    # =========================
     async def _worker_loop(self):
         while not self.shutdown_event.is_set() or not self.queue.empty():
             try:
@@ -76,9 +68,7 @@ class AsyncProcessor:
             except Exception as e:
                 print("Worker error:", e)
 
-    # =========================
     # Procesamiento de eventos
-    # =========================
     async def _process_event_db(self, event):
         try:
             async with self.db_pool.acquire() as conn:
@@ -91,15 +81,11 @@ class AsyncProcessor:
         except Exception as e:
             print(f"DB write failed for event {event.get('id')}: {e}")
 
-    # =========================
     # Validación mínima
-    # =========================
     def _validate_event(self, event):
         return all(field in event for field in REQUIRED_EVENT_FIELDS)
 
-    # =========================
     # GRACEFUL SHUTDOWN
-    # =========================
     async def stop(self):
         print("Processor stopping...")
         self.shutdown_event.set()
@@ -124,23 +110,15 @@ class AsyncProcessor:
         await self.db_pool.close()
         print("Processor stopped gracefully.")
 
-
-# =========================
-# MAIN
-# =========================
 async def main():
     processor = AsyncProcessor(db_dsn="postgres://user:pass@localhost/db", worker_count=4)
     await processor.start()
 
-    # Manejar SIGINT/SIGTERM para shutdown
     loop = asyncio.get_running_loop()
     stop_event = asyncio.Event()
     for sig in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(sig, stop_event.set)
-
     await stop_event.wait()
     await processor.stop()
-
 if __name__ == "__main__":
     asyncio.run(main())
-

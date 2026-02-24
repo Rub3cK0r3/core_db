@@ -16,9 +16,7 @@ class AsyncAlertManager:
         self.db_pool = None
         self.shutdown_event = asyncio.Event()
 
-    # =========================
     # START
-    # =========================
     async def start(self):
         # Crear pool de DB
         self.db_pool = await asyncpg.create_pool(dsn=self.db_dsn)
@@ -34,9 +32,7 @@ class AsyncAlertManager:
 
         print("AsyncAlertManager started.")
 
-    # =========================
     # LISTENER LOOP (PostgreSQL NOTIFY)
-    # =========================
     async def _listener_loop(self):
         while not self.shutdown_event.is_set():
             try:
@@ -49,9 +45,7 @@ class AsyncAlertManager:
                 print("Listener error:", e)
                 await asyncio.sleep(2)  # reconexión lenta
 
-    # =========================
     # CALLBACK por cada notificación
-    # =========================
     def _notify_callback(self, connection, pid, channel, payload):
         try:
             event = json.loads(payload)
@@ -63,9 +57,7 @@ class AsyncAlertManager:
         except json.JSONDecodeError:
             print("Invalid JSON payload:", payload)
 
-    # =========================
     # WORKER LOOP (async)
-    # =========================
     async def _worker_loop(self):
         while not self.shutdown_event.is_set() or not self.queue.empty():
             try:
@@ -77,9 +69,7 @@ class AsyncAlertManager:
             except Exception as e:
                 print("Worker error:", e)
 
-    # =========================
     # Procesamiento de alertas
-    # =========================
     async def _process_alert(self, event):
         try:
             # Solo alertas críticas
@@ -94,15 +84,11 @@ class AsyncAlertManager:
         except Exception as e:
             print(f"DB write failed for alert {event.get('id')}: {e}")
 
-    # =========================
     # Validación mínima
-    # =========================
     def _validate_alert(self, event):
         return all(field in event for field in REQUIRED_ALERT_FIELDS)
 
-    # =========================
     # GRACEFUL SHUTDOWN
-    # =========================
     async def stop(self):
         print("AlertManager stopping...")
         self.shutdown_event.set()
@@ -127,10 +113,6 @@ class AsyncAlertManager:
         await self.db_pool.close()
         print("AlertManager stopped gracefully.")
 
-
-# =========================
-# MAIN
-# =========================
 async def main():
     alert_manager = AsyncAlertManager(db_dsn="postgres://user:pass@localhost/db", worker_count=2)
     await alert_manager.start()
@@ -140,10 +122,7 @@ async def main():
     stop_event = asyncio.Event()
     for sig in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(sig, stop_event.set)
-
     await stop_event.wait()
     await alert_manager.stop()
-
 if __name__ == "__main__":
     asyncio.run(main())
-

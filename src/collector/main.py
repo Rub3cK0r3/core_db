@@ -15,9 +15,7 @@ class AsyncCollector:
         self.db_pool = None
         self.shutdown_event = asyncio.Event()
 
-    # =========================
     # START
-    # =========================
     async def start(self):
         # Crear pool de DB
         self.db_pool = await asyncpg.create_pool(dsn=self.db_dsn)
@@ -33,9 +31,7 @@ class AsyncCollector:
 
         print("AsyncCollector started.")
 
-    # =========================
     # LISTENER LOOP (PostgreSQL NOTIFY)
-    # =========================
     async def _listener_loop(self):
         while not self.shutdown_event.is_set():
             try:
@@ -49,9 +45,7 @@ class AsyncCollector:
                 print("Listener error:", e)
                 await asyncio.sleep(2)  # Retry lento
 
-    # =========================
     # CALLBACK por cada notificación
-    # =========================
     def _notify_callback(self, connection, pid, channel, payload):
         try:
             event = json.loads(payload)
@@ -63,9 +57,7 @@ class AsyncCollector:
         except json.JSONDecodeError:
             print("Invalid JSON payload:", payload)
 
-    # =========================
     # WORKER LOOP (async)
-    # =========================
     async def _worker_loop(self):
         while not self.shutdown_event.is_set() or not self.queue.empty():
             try:
@@ -77,9 +69,7 @@ class AsyncCollector:
             except Exception as e:
                 print("Worker error:", e)
 
-    # =========================
     # Procesamiento con transacción
-    # =========================
     async def _process_event_db(self, event):
         try:
             async with self.db_pool.acquire() as conn:
@@ -92,15 +82,11 @@ class AsyncCollector:
         except Exception as e:
             print("DB write failed for event:", event, "Error:", e)
 
-    # =========================
     # Validación mínima
-    # =========================
     def _validate_event(self, event):
         return all(field in event for field in REQUIRED_EVENT_FIELDS)
 
-    # =========================
     # GRACEFUL SHUTDOWN
-    # =========================
     async def stop(self):
         print("Collector stopping...")
         self.shutdown_event.set()
@@ -125,10 +111,6 @@ class AsyncCollector:
         await self.db_pool.close()
         print("Collector stopped gracefully.")
 
-
-# =========================
-# MAIN
-# =========================
 async def main():
     collector = AsyncCollector(db_dsn="postgres://user:pass@localhost/db", worker_count=4) # CAMBIAR POR LOS DEL ENTORNO PostgreSQL
     await collector.start()
@@ -136,13 +118,9 @@ async def main():
     # Manejar SIGINT/SIGTERM para shutdown
     loop = asyncio.get_running_loop()
     stop_event = asyncio.Event()
-
     for sig in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(sig, stop_event.set)
-
     await stop_event.wait()
     await collector.stop()
-
 if __name__ == "__main__":
     asyncio.run(main())
-
