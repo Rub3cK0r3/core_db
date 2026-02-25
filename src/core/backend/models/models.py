@@ -1,4 +1,6 @@
 from sqlalchemy import (
+    Column,
+    Integer,    
     String,
     Text,
     BigInteger,
@@ -40,3 +42,10 @@ Index("idx_app_stage", Event.app_stage)
 Index("idx_endpoint_country", Event.endpoint_country)
 Index("idx_timestamp", Event.timestamp)
 Index("idx_received_at", Event.received_at)
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
