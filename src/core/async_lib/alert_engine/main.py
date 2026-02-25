@@ -2,7 +2,7 @@ import asyncio
 import asyncpg
 import json
 
-from core.async.async_manager import AsyncManager
+from core.async_lib.async_manager import AsyncManager
 
 REQUIRED_ALERT_FIELDS = ["id", "severity", "resource"]
 

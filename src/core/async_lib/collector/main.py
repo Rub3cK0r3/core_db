@@ -4,7 +4,7 @@ import json
 import signal
 
 # Importar AsyncManager como antes
-from core.async.async_manager import AsyncManager
+from core.async_lib.async_manager import AsyncManager
 
 REQUIRED_EVENT_FIELDS = ["type", "payload"]
 
