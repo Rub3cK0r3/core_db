@@ -143,16 +143,6 @@ async_manager.emit("nuevo_registro", {"id": 1, "user": "alice"})
 
 ---
 
-## 📌 Issues iniciales sugeridos
-
-1. **Integrar logging tamper-evident** – Hash logs y encadenado.
-2. **Agregar tests de integración** – Ingesta → procesador → alertas.
-3. **Crear ejemplo de alerta CLI** – Basado en `pipeline.py`.
-4. **Documentar AsyncManager** – Explicar flujo de eventos y hooks.
-5. **Docker Compose básico** – Levantar collector + processor + DB.
-
----
-
 ## 📝 Licencia
 
 MIT License © 2026
