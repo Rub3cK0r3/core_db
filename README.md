@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ## core_db – Sentinel-style backend monitoring
 
 `core_db` is a **backend-first, CLI-first event monitoring stack**.  
@@ -279,4 +278,3 @@ async_manager.emit("nuevo_registro", {"id": 1, "user": "alice"})
 ## 📝 Licencia
 
 MIT License © 2026
->>>>>>> github/master
