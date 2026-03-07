@@ -1,6 +1,7 @@
 import asyncio
 import asyncpg
 import json
+import os
 import signal
 
 # Importar AsyncManager como antes
@@ -133,14 +134,16 @@ class AsyncCollector:
 
 
 # --- EJEMPLO DE EJECUCIÓN ---
-async def main():
+    async def main():
     from fastapi import FastAPI
 
     app = FastAPI()
     app.active_connections = []  # lista de WebSockets para notificaciones
 
+    db_dsn = os.getenv("DATABASE_URL", "postgresql://devuser:devpass@db:5432/coredb")
+
     collector = AsyncCollector(
-        db_dsn="postgres://user:pass@localhost/db",  # Cambiar por tu entorno
+        db_dsn=db_dsn,
         fastapi_app=app,
         worker_count=4
     )

@@ -4,4 +4,4 @@ COPY deploy/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ /app
 ENV PYTHONPATH=/app:$PYTHONPATH
-CMD ["python", "-m", "alert_engine.main"]
+CMD ["python", "-m", "core.async_lib.alert_engine.main"]

@@ -1,6 +1,6 @@
 # 01-project-definition.md
 
-Project Name: core-db
+Project Name: core_db (Sentinel-style backend monitor)
 
 One-line pitch: Self-hosted enterprise backend monitoring and alert platform.
 

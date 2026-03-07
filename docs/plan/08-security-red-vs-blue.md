@@ -11,21 +11,21 @@ Threat model:
 Attacks:
 
 * [ ] SQL injection simulation
-* [ ] API key brute force
+* [ ] API key / password brute force
 * [ ] Event replay
 * [ ] Unauthorized access to logs
 * [ ] Container escape attempt
 
 Detection:
 
-* [ ] Logs show failed auth attempts
+* [x] Logs show failed auth attempts (e.g. `AUTH_FAIL` in backend logs)
 * [ ] Alerts for abnormal DB queries
 * [ ] Container metrics anomalies
 * [ ] Audit log hashes mismatch
 
 Mitigation:
 
-* [ ] Parameterized queries
+* [x] Parameterized queries / ORM (SQLAlchemy + psycopg)
 * [ ] Rate limiting
-* [ ] RBAC enforcement
-* [ ] Container namespace isolation
+* [x] RBAC enforcement (JWT-required event API)
+* [ ] Container namespace isolation / hardening

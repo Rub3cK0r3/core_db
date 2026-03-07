@@ -2,12 +2,12 @@
 
 Acceptable:
 
-* [ ] Backend collects data reliably
-* [ ] RBAC enforced for all endpoints
-* [ ] Audit logs generated per action
-* [ ] Alerts trigger on configurable thresholds
-* [ ] Deployable via Docker Compose
-* [ ] Runs entirely from CLI
+* [x] Backend collects events reliably (PostgreSQL + indexed schema)
+* [x] RBAC enforced for all event endpoints (JWT bearer required)
+* [x] Audit logs generated per action (auth + event access)
+* [ ] Alerts trigger on configurable thresholds (currently severity-based only)
+* [x] Deployable via Docker Compose
+* [x] Runs entirely from CLI
 
 Useless:
 
@@ -19,12 +19,12 @@ Useless:
 Operational criteria:
 
 * [ ] 99% uptime on local server
-* [ ] Event ingestion <500ms
-* [ ] Logs rotated and persisted
+* [ ] Event ingestion <500ms (under defined load profile)
+* [ ] Logs rotated and persisted (beyond container lifetime)
 
 Security criteria:
 
-* [ ] Role-based access control
+* [x] Role-based access control (authenticated access to event API)
 * [ ] Basic anomaly detection for database queries
-* [ ] Alerts for suspicious activity
+* [ ] Alerts for suspicious activity (beyond severity-based alerts)
 * [ ] Tamper-evident logs

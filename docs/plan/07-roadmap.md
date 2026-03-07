@@ -2,15 +2,15 @@
 
 Level 0 — It Runs
 
-* [ ] Objective: Basic ingestion pipeline
-* [ ] Deliverables: Event collector + DB
-* [ ] Done: `docker-compose up`, test ingestion with `curl`
+* [x] Objective: Basic ingestion pipeline
+* [x] Deliverables: Event collector + DB (containerized Postgres + events table)
+* [x] Done: `docker compose up`, test ingestion with `curl`
 
 Level 1 — MVP
 
-* [ ] Objective: RBAC, audit logs, basic alerts
-* [ ] Deliverables: Processor + Alert Engine
-* [ ] Done: Verify logs and alerts with sample events
+* [x] Objective: RBAC, audit logs, basic alerts
+* [x] Deliverables: Backend API + alert persistence on critical events
+* [x] Done: Verify logs and alerts with sample events (see `11-examples-and-testcases.md`)
 
 Level 2 — Pro Version
 
