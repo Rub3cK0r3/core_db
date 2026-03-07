@@ -125,14 +125,6 @@ async_manager.emit("nuevo_registro", {"id": 1, "user": "alice"})
 
 ---
 
-## 📖 Documentación
-
-* `docs/async_manager.md` – Funciones y flujo de eventos
-* `docs/event_pipeline.md` – Diagramas y ejemplos
-* `docs/examples.md` – Pipelines completos y testcases
-
----
-
 ## 🔒 Seguridad
 
 * RBAC en todos los endpoints
