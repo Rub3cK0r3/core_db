@@ -1,5 +1,7 @@
+import os
+
 import asyncpg
-import json
+import httpx
 
 REQUIRED_EVENT_FIELDS = ["id", "app_name", "type", "payload"]
 
@@ -10,8 +12,8 @@ class EventProcessor:
 
     Responsibilities:
         - Validate incoming events.
-        - Persist valid events into the database.
-        - Encapsulate database transaction logic.
+        - Persist valid events via the backend API.
+        - Encapsulate event-level business rules.
 
     This class does NOT manage:
         - Async workers
@@ -20,14 +22,16 @@ class EventProcessor:
         - Application lifecycle
     """
 
-    def __init__(self, db_pool: asyncpg.pool.Pool):
+    def __init__(self, db_pool: asyncpg.pool.Pool | None = None, backend_base_url: str | None = None):
         """
         Initializes the EventProcessor.
 
         Args:
-            db_pool (asyncpg.pool.Pool): Active PostgreSQL connection pool.
+            db_pool (asyncpg.pool.Pool | None): Kept for backwards compatibility but no longer used.
+            backend_base_url (str | None): Base URL of the backend API.
         """
         self.db_pool = db_pool
+        self.backend_base_url = backend_base_url or os.getenv("BACKEND_BASE_URL", "http://backend:8000")
 
     # PUBLIC ENTRY POINT
     async def handle(self, event: dict):
@@ -43,33 +47,27 @@ class EventProcessor:
 
         await self._insert_event(event)
 
-    # DATABASE INSERT
+    # API INSERT
     async def _insert_event(self, event: dict):
         """
-        Inserts an event into the 'events' table using a transaction.
-
-        Args:
-            event (dict): Event dictionary containing
-                'id', 'app_name', 'type', and 'payload'.
+        Persists an event by calling the internal backend API instead of
+        writing directly to PostgreSQL.
         """
         try:
-            async with self.db_pool.acquire() as conn:
-                async with conn.transaction():
-                    await conn.execute(
-                        """
-                        INSERT INTO events(id, app_name, type, payload)
-                        VALUES($1, $2, $3, $4)
-                        """,
-                        event["id"],
-                        event["app_name"],
-                        event["type"],
-                        json.dumps(event["payload"])
-                    )
+            async with httpx.AsyncClient(base_url=self.backend_base_url, timeout=5.0) as client:
+                payload = {
+                    "id": event["id"],
+                    "app_name": event["app_name"],
+                    "type": event["type"],
+                    "payload": event,
+                }
+                response = await client.post("/internal/pipeline/events", json=payload)
+                response.raise_for_status()
 
-            print(f"Processed event: {event['id']}")
+            print(f"Processed event via API: {event['id']}")
 
         except Exception as e:
-            print(f"DB write failed for event {event.get('id')}: {e}")
+            print(f"API write failed for event {event.get('id')}: {e}")
 
     # VALIDATION
     def _validate_event(self, event: dict) -> bool:

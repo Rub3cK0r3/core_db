@@ -1,8 +1,10 @@
 import asyncio
-import asyncpg
 import json
 import os
 import signal
+
+import asyncpg
+import httpx
 
 # Importar AsyncManager como antes
 from core.async_lib.async_manager import AsyncManager
@@ -18,7 +20,7 @@ class AsyncCollector:
         - Notifica en tiempo real a FastAPI vía WebSocket
     """
 
-    def __init__(self, db_dsn, fastapi_app=None, worker_count=4, max_queue_size=1000):
+    def __init__(self, db_dsn, fastapi_app=None, worker_count=4, max_queue_size=1000, backend_base_url: str | None = None):
         self.db_dsn = db_dsn
         self.db_pool = None
         self.listener_task = None
@@ -29,6 +31,9 @@ class AsyncCollector:
 
         # Referencia a FastAPI (para WebSockets)
         self.fastapi_app = fastapi_app
+
+        # Backend API base URL (para persistir eventos vía servicio)
+        self.backend_base_url = backend_base_url or os.getenv("BACKEND_BASE_URL", "http://backend:8000")
 
     # --- INICIO ---
     async def start(self):
@@ -76,24 +81,25 @@ class AsyncCollector:
 
     # --- PROCESAMIENTO DE EVENTO ---
     async def _process_event(self, event):
-        """Procesa un evento: guarda en DB y notifica FastAPI WebSocket"""
-        await self._insert_event_db(event)
+        """Procesa un evento: persiste vía API y notifica FastAPI WebSocket"""
+        await self._insert_event_api(event)
         await self._notify_fastapi(event)
 
-    # Inserción en DB
-    async def _insert_event_db(self, event):
+    # Inserción vía API
+    async def _insert_event_api(self, event):
         try:
-            async with self.db_pool.acquire() as conn:
-                async with conn.transaction():
-                    await conn.execute(
-                        "INSERT INTO events(type, payload) VALUES($1, $2)",
-                        event["type"],
-                        json.dumps(event["payload"])
-                    )
-            print("Processed event in DB:", event)
+            async with httpx.AsyncClient(base_url=self.backend_base_url, timeout=5.0) as client:
+                payload = {
+                    "type": event["type"],
+                    "payload": event,
+                }
+                response = await client.post("/internal/pipeline/events", json=payload)
+                response.raise_for_status()
+
+            print("Processed event via API:", event)
 
         except Exception as e:
-            print("DB write failed for event:", event, "Error:", e)
+            print("API write failed for event:", event, "Error:", e)
 
     # Notificación en FastAPI WebSocket
     async def _notify_fastapi(self, event):
@@ -134,7 +140,7 @@ class AsyncCollector:
 
 
 # --- EJEMPLO DE EJECUCIÓN ---
-    async def main():
+async def main():
     from fastapi import FastAPI
 
     app = FastAPI()
@@ -145,7 +151,7 @@ class AsyncCollector:
     collector = AsyncCollector(
         db_dsn=db_dsn,
         fastapi_app=app,
-        worker_count=4
+        worker_count=4,
     )
 
     await collector.start()
