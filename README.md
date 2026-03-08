@@ -409,3 +409,9 @@ See [LICENSE](LICENSE) for full text.
 <p align="center">
   Built with 🔒 security and ⚡ performance in mind.
 </p>
+
+---
+
+<p align="center">
+  Copyright (c) 2026 Rub3ck0r3.
+</p>
