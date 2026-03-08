@@ -413,5 +413,5 @@ See [LICENSE](LICENSE) for full text.
 ---
 
 <p align="start">
-  Copyright (c) 2026 Rub3ck0r3.
+  Copyright (c) 2026 <b>Rub3ck0r3</b>.
 </p>
