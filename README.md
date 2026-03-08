@@ -406,12 +406,12 @@ See [LICENSE](LICENSE) for full text.
 
 ---
 
-<p align="center">
+<p align="start">
   Built with 🔒 security and ⚡ performance in mind.
 </p>
 
 ---
 
-<p align="center">
+<p align="start">
   Copyright (c) 2026 Rub3ck0r3.
 </p>
