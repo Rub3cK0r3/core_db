@@ -9,6 +9,9 @@ description = "CLI-first event pipeline for backend monitoring with security and
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
+authors = [
+    {name =  "Rubén Martínez Agramunt"}
+]
 
 dependencies = [
     "fastapi==0.129.0",
