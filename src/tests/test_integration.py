@@ -1,41 +1,74 @@
+import asyncio
 import unittest
-import threading
-import time
-import os,sys
+from unittest.mock import AsyncMock, patch
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../..')
+from core.async_lib.async_manager import AsyncManager
+from core.async_lib.processor.main import EventProcessor
+from core.async_lib.alert_engine.main import AlertManager as AsyncAlertManager
 
-from collector.main import Collector
-from processor.main import Processor
-from alert_engine.main import AlertManager
 
-class TestIntegration(unittest.TestCase):
-    def test_pipeline(self):
-        collector = Collector(max_queue_size=10)
-        processor = Processor(worker_count=2)
-        alert_manager = AlertManager(worker_count=1)
-        
-        # Mock events y alertas
-        events = [{"id": i, "app_name": "App", "type": "T"} for i in range(5)]
-        alerts = [{"id": i, "severity": "fatal", "resource": "res"} for i in range(3)]
-        
-        for e in events:
-            collector.event_queue.put(e)
-        for a in alerts:
-            alert_manager.event_queue.put(a)
-        
-        t1 = threading.Thread(target=processor._worker_loop)
-        t2 = threading.Thread(target=alert_manager._worker_loop)
-        t1.start(); t2.start()
-        
-        time.sleep(2)
-        
-        self.assertTrue(collector.event_queue.empty())
-        self.assertTrue(alert_manager.event_queue.empty())
-        
-        processor.stop()
-        alert_manager.stop()
-        t1.join(); t2.join()
+class TestAsyncPipelineIntegration(unittest.TestCase):
+    """
+    Minimal end-to-end test for the async pipeline:
+        AsyncManager -> EventProcessor / AlertManager
+
+    It verifies that valid events and alerts traverse the queue and
+    reach the backend API integration points (mocked).
+    """
+
+    def _run(self, coro):
+        return asyncio.run(coro)
+
+    @patch("core.async_lib.processor.main.httpx.AsyncClient")
+    @patch("core.async_lib.alert_engine.main.httpx.AsyncClient")
+    def test_events_and_alerts_flow_through_pipeline(self, mock_alert_client_cls, mock_event_client_cls):
+        # Configure HTTP client mocks
+        mock_event_client = AsyncMock()
+        mock_event_client.__aenter__.return_value = mock_event_client
+        mock_event_client.post.return_value = AsyncMock(status_code=200)
+        mock_event_client_cls.return_value = mock_event_client
+
+        mock_alert_client = AsyncMock()
+        mock_alert_client.__aenter__.return_value = mock_alert_client
+        mock_alert_client.post.return_value = AsyncMock(status_code=200)
+        mock_alert_client_cls.return_value = mock_alert_client
+
+        async def scenario():
+            manager = AsyncManager(worker_count=4, max_queue_size=100)
+            processor = EventProcessor()
+            alert_manager = AsyncAlertManager()
+
+            # Start workers for events and alerts
+            await manager.start(processor.handle)
+
+            # Enqueue events
+            events = [
+                {"id": f"evt-{i}", "app_name": "App", "type": "T", "payload": {"i": i}}
+                for i in range(5)
+            ]
+            for e in events:
+                await manager.enqueue(e)
+
+            # Process alerts directly through alert manager (no queue layer yet)
+            alerts = [
+                {"id": f"alert-{i}", "severity": "fatal", "resource": "res"}
+                for i in range(3)
+            ]
+            for a in alerts:
+                await alert_manager.handle(a)
+
+            # Give the workers a moment to drain the queue
+            await asyncio.sleep(0.1)
+
+            await manager.stop()
+
+        self._run(scenario())
+
+        # All events should have triggered an API call
+        self.assertGreaterEqual(mock_event_client.post.call_count, 5)
+        # All fatal alerts should have triggered an API call
+        self.assertEqual(mock_alert_client.post.call_count, 3)
+
 
 if __name__ == "__main__":
     unittest.main()
