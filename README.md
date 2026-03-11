@@ -137,9 +137,8 @@ export SECRET_KEY="your-secret-key-here"
 ### 3. Run the Application
 
 ```bash
-# Start the main application
-cd src
-python setup.py
+export PYTHONPATH=src
+python src/setup.py
 ```
 
 ---
@@ -372,11 +371,12 @@ Please report security vulnerabilities privately via GitHub Security Advisories 
 
 ### Level 0 — It Runs ✅
 - Event Collector + DB Storage
-- `docker-compose up` with basic `curl` testing
+- `docker compose up` with basic `curl` testing
 
-### Level 1 — MVP 🚧
+### Level 1 — MVP ✅
 - Processor + Alert Engine
-- RBAC and auditable logs
+- RBAC and auditable logs (baseline)
+- Async pipeline with API-based persistence
 
 ### Level 2 — Pro 📋
 - Multi-container orchestration
@@ -387,6 +387,94 @@ Please report security vulnerabilities privately via GitHub Security Advisories 
 - Comprehensive unit/integration tests
 - Fuzzing and simulated attacks
 - Log tampering detection
+
+---
+
+## 🧪 Quality & CI
+
+### Tests
+
+The repository includes a small but focused test suite:
+
+- **Unit tests** for:
+  - Event validation (`Processor` / `EventProcessor`)
+  - Alert validation and thresholds (`AlertManager`)
+  - Collector event validation (`AsyncCollector`)
+- **Integration-style test** for the async pipeline:
+  - `AsyncManager` → `EventProcessor` → backend API (mocked)
+  - `AsyncAlertManager` → backend API (mocked)
+
+Run locally:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r deploy/requirements.txt
+pip install pytest
+
+export PYTHONPATH=src
+pytest src/tests -q
+```
+
+### Continuous Integration (GitHub Actions)
+
+A minimal CI pipeline is defined under `.github/workflows/ci.yml`:
+
+- Python 3.11
+- Install dependencies from `deploy/requirements.txt`
+- Run `pytest src/tests -q` with `PYTHONPATH=src`
+
+Every push or pull request to `main`/`master` runs this pipeline to keep the MVP stable.
+
+---
+
+## 🎛️ Alert Configuration (MVP)
+
+The alert engine is designed to be **severity-driven** with a simple, declarative threshold:
+
+- Supported severities (ordered): `debug < info < warning < error < fatal`
+- Environment variable: `ALERT_MIN_SEVERITY`
+  - Default: `"error"`
+  - Any alert with severity **below** this threshold is ignored by the API writer.
+
+### Examples
+
+#### Default behavior (no environment variable)
+
+```bash
+export PYTHONPATH=src
+python - << 'EOF'
+from core.async_lib.alert_engine.main import AlertManager
+import asyncio
+
+async def main():
+    am = AlertManager()
+    await am.handle({"id": "1", "severity": "error", "resource": "/api", "payload": {}})
+    await am.handle({"id": "2", "severity": "info", "resource": "/api", "payload": {}})
+
+asyncio.run(main())
+EOF
+```
+
+- `"error"` is sent to `/internal/pipeline/alerts`.
+- `"info"` is ignored (below default `"error"` threshold).
+
+#### Raise sensitivity to `warning`
+
+```bash
+export ALERT_MIN_SEVERITY=warning
+export PYTHONPATH=src
+```
+
+Now all `warning`, `error`, and `fatal` alerts will trigger the API writer.
+
+#### Lock-down mode (only fatal)
+
+```bash
+export ALERT_MIN_SEVERITY=fatal
+```
+
+Only `fatal` alerts will be persisted via the alert engine.
 
 ---
 

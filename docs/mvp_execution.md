@@ -17,10 +17,16 @@ After reviewing build, deployment, and automated tests, the project status is:
 | **Build and imports** | ✅ OK | With a virtualenv and `PYTHONPATH=src`, core modules (backend, async_lib, database) import without errors. |
 | **Docker build** | ✅ OK | `docker compose build` in `deploy/` completes successfully for backend, collector, processor, and alert_engine. |
 | **Docker run** | ⚠️ Environment-dependent | The stack requires port **5432** to be free. If PostgreSQL or another service is using it, `docker compose up -d` will fail until the port is freed or the mapping is changed. |
-| **Test suite** | ⚠️ Partial | Two of four tests pass (alert_manager, processor). Two fail because the Collector API now requires the `db_dsn` argument; the tests still use the old signature. |
-| **Pipeline services** | ✅ Operational | Backend (FastAPI) and Collector have a defined entry point and run correctly. Processor and AlertEngine in Compose are pipeline components; as standalone containers they do not run a long-lived loop. The viable MVP flow is **db + backend + collector**. |
+| **Test suite** | ✅ Baseline | Updated tests cover collector validation, alert thresholds, processor validation, and a minimal async pipeline integration (API calls mocked). |
+| **Pipeline services** | ✅ Operational | Backend (FastAPI), Collector, Processor, and AlertEngine are wired through an async queue + internal API. The most common MVP flow is **db + backend + collector + processor + alert_engine** (via Docker or `src/setup.py`). |
 
-**Conclusion:** The project can be considered a **runnable MVP**. The API, database, collector, and local pipeline (`setup.py`) are usable. For stable use, ensure port 5432 is available (or remap it) for Docker and update the collector tests to use the current signature (required `db_dsn` or equivalent mock).
+**Conclusion:** The project is a **runnable MVP** with:
+
+- API + database + collector + processor + alert engine.
+- Async queue between ingestion and processing.
+- Baseline test coverage and CI via GitHub Actions.
+
+For stable use, ensure port 5432 is available (or remap it) for Docker.
 
 ---
 
@@ -152,7 +158,7 @@ uvicorn core.backend.main:app --host 0.0.0.0 --port 8000
 
 Check: <http://localhost:8000/docs>.
 
-#### 2.5 Run the full pipeline (collector + processor)
+#### 2.5 Run the full pipeline (collector + processor + alert engine)
 
 Single process that starts the collector, processor, and worker queue:
 
@@ -186,11 +192,12 @@ This starts the collector (PostgreSQL listener), event processor, and workers; u
   docker compose build
   ```
 
-- **Tests** (optional; requires pytest in the venv):
+- **Tests** (recommended; requires pytest in the venv):
 
   ```bash
   pip install pytest
-  PYTHONPATH=src pytest src/tests/ -v --tb=short
+  export PYTHONPATH=src
+  pytest src/tests/ -v --tb=short
   ```
 
 ---

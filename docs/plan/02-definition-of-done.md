@@ -5,7 +5,7 @@ Acceptable:
 * [x] Backend collects events reliably (PostgreSQL + indexed schema)
 * [x] RBAC enforced for all event endpoints (JWT bearer required)
 * [x] Audit logs generated per action (auth + event access)
-* [ ] Alerts trigger on configurable thresholds (currently severity-based only)
+* [x] Alerts trigger on configurable thresholds (severity-based via `ALERT_MIN_SEVERITY`)
 * [x] Deployable via Docker Compose
 * [x] Runs entirely from CLI
 
