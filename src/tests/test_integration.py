@@ -25,48 +25,29 @@ class TestAsyncPipelineIntegration(unittest.TestCase):
         # -----------------------------
         # Configure EVENT HTTP client mock
         # -----------------------------
-
-        # This mock will act as the HTTP client inside "async with"
         mock_event_client = AsyncMock()
-
-        # Create async context manager mock
         mock_event_cm = AsyncMock()
         mock_event_cm.__aenter__.return_value = mock_event_client
         mock_event_cm.__aexit__.return_value = None
-
-        # AsyncClient() returns the context manager
         mock_event_client_cls.return_value = mock_event_cm
 
-        # Mock HTTP response
         event_response = MagicMock()
         event_response.status_code = 200
-        event_response.raise_for_status = MagicMock()  # sync method in httpx
-
-        # Mock POST call
+        event_response.raise_for_status = MagicMock()
         mock_event_client.post = AsyncMock(return_value=event_response)
 
         # -----------------------------
         # Configure ALERT HTTP client mock
         # -----------------------------
-
-        # This mock will act as the HTTP client inside "async with"
         mock_alert_client = AsyncMock()
-
-        # Create async context manager mock
         mock_alert_cm = AsyncMock()
         mock_alert_cm.__aenter__.return_value = mock_alert_client
         mock_alert_cm.__aexit__.return_value = None
-
-        # IMPORTANT:
-        # AsyncClient() must return the context manager, not the client directly
         mock_alert_client_cls.return_value = mock_alert_cm
 
-        # Mock HTTP response
         alert_response = MagicMock()
         alert_response.status_code = 200
-        alert_response.raise_for_status = MagicMock()  # sync method in httpx
-
-        # Mock POST call
+        alert_response.raise_for_status = MagicMock()
         mock_alert_client.post = AsyncMock(return_value=alert_response)
 
         # -----------------------------
@@ -75,6 +56,8 @@ class TestAsyncPipelineIntegration(unittest.TestCase):
         async def scenario():
             manager = AsyncManager(worker_count=4, max_queue_size=100)
             processor = EventProcessor()
+
+            # Create the alert manager AFTER mocks are set up
             alert_manager = AsyncAlertManager()
 
             # Start workers for event processing
@@ -108,11 +91,7 @@ class TestAsyncPipelineIntegration(unittest.TestCase):
         # -----------------------------
         # Assertions
         # -----------------------------
-
-        # All events should trigger API calls
         self.assertGreaterEqual(mock_event_client.post.call_count, 5)
-
-        # All fatal alerts should trigger API calls
         self.assertEqual(mock_alert_client.post.call_count, 3)
 
 
