@@ -9,13 +9,14 @@ from core.async_lib.alert_engine.main import AlertManager as AsyncAlertManager
 
 class TestAsyncPipelineIntegration(unittest.TestCase):
     """
-    Minimal end-to-end test for the async pipeline:
-        AsyncManager -> EventProcessor / AlertManager
+    End-to-end integration test for async pipeline:
+    AsyncManager -> EventProcessor / AsyncAlertManager
 
-    It verifies that valid events and alerts traverse the queue and
-    reach the backend API integration points (mocked).
+    Verifies that events and alerts traverse the async queue
+    and trigger API calls (mocked HTTP clients).
     """
 
+    # Helper to run async coroutines in sync context
     def _run(self, coro):
         return asyncio.run(coro)
 
@@ -23,27 +24,27 @@ class TestAsyncPipelineIntegration(unittest.TestCase):
     @patch("core.async_lib.alert_engine.main.httpx.AsyncClient")
     def test_events_and_alerts_flow_through_pipeline(self, mock_alert_client_cls, mock_event_client_cls):
         # -----------------------------
-        # Configure EVENT HTTP client mock
+        # Mock HTTP client for events
         # -----------------------------
         mock_event_client = AsyncMock()
-        mock_event_cm = AsyncMock()
-        mock_event_cm.__aenter__.return_value = mock_event_client
-        mock_event_cm.__aexit__.return_value = None
-        mock_event_client_cls.return_value = mock_event_cm
+        event_cm = AsyncMock()
+        event_cm.__aenter__.return_value = mock_event_client
+        event_cm.__aexit__.return_value = None
+        mock_event_client_cls.return_value = event_cm
 
         event_response = MagicMock()
         event_response.status_code = 200
-        event_response.raise_for_status = MagicMock()
+        event_response.raise_for_status = MagicMock()  # sync method
         mock_event_client.post = AsyncMock(return_value=event_response)
 
         # -----------------------------
-        # Configure ALERT HTTP client mock
+        # Mock HTTP client for alerts
         # -----------------------------
         mock_alert_client = AsyncMock()
-        mock_alert_cm = AsyncMock()
-        mock_alert_cm.__aenter__.return_value = mock_alert_client
-        mock_alert_cm.__aexit__.return_value = None
-        mock_alert_client_cls.return_value = mock_alert_cm
+        alert_cm = AsyncMock()
+        alert_cm.__aenter__.return_value = mock_alert_client
+        alert_cm.__aexit__.return_value = None
+        mock_alert_client_cls.return_value = alert_cm
 
         alert_response = MagicMock()
         alert_response.status_code = 200
@@ -57,10 +58,10 @@ class TestAsyncPipelineIntegration(unittest.TestCase):
             manager = AsyncManager(worker_count=4, max_queue_size=100)
             processor = EventProcessor()
 
-            # Create the alert manager AFTER mocks are set up
+            # Instantiate AsyncAlertManager AFTER mocks are set
             alert_manager = AsyncAlertManager()
 
-            # Start workers for event processing
+            # Start event workers
             await manager.start(processor.handle)
 
             # Enqueue events
@@ -71,7 +72,7 @@ class TestAsyncPipelineIntegration(unittest.TestCase):
             for e in events:
                 await manager.enqueue(e)
 
-            # Process alerts directly (not via queue)
+            # Process alerts directly (not through the queue)
             alerts = [
                 {"id": f"alert-{i}", "severity": "fatal", "resource": "res"}
                 for i in range(3)
@@ -79,19 +80,21 @@ class TestAsyncPipelineIntegration(unittest.TestCase):
             for a in alerts:
                 await alert_manager.handle(a)
 
-            # Allow time for async workers to process the queue
+            # Let async workers drain the queue
             await asyncio.sleep(0.1)
 
             # Stop workers gracefully
             await manager.stop()
 
-        # Run async scenario
+        # Run the async scenario
         self._run(scenario())
 
         # -----------------------------
         # Assertions
         # -----------------------------
+        # All events should trigger API calls
         self.assertGreaterEqual(mock_event_client.post.call_count, 5)
+        # All fatal alerts should trigger API calls
         self.assertEqual(mock_alert_client.post.call_count, 3)
 
 
