@@ -1,3 +1,7 @@
+# The architecture choice is docker compose because then
+# improves consistency, isolation, and reproducibility.
+# For running the CLI inside a container it is a bit more overhead
+# but we will improve it later with aliases and so on and so forth
 services:
   db:
     image: postgres:16
@@ -16,10 +20,12 @@ services:
     build:
       context: ..
       dockerfile: deploy/docker/Backend.Dockerfile
-    container_name: deploy-backend
+    container_name: backend
     depends_on:
       - db
     environment:
+      # This URL will be repeated all over the deploys in all 
+      # of the containers, we have to improve this and test it..
       DATABASE_URL: postgresql://devuser:devpass@db:5432/eventdb
       SECRET_KEY: dev-secret-key
     ports:
@@ -29,7 +35,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/docker/Collector.Dockerfile
-    container_name: deploy-collector
+    container_name: collector
     depends_on:
       - db
     environment:
@@ -41,7 +47,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/docker/Processor.Dockerfile
-    container_name: deploy-processor
+    container_name: processor
     depends_on:
       - db
     environment:
@@ -53,7 +59,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/docker/AlertEngine.Dockerfile
-    container_name: deploy-alert_engine
+    container_name: alert_engine
     depends_on:
       - db
     environment:
