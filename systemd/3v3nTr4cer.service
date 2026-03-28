@@ -1,0 +1,16 @@
+[Unit]
+Description=3v3nTr4cer Docker Compose Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/ruben/Desktop/github_repos/3v3nTr4cer/deploy
+ExecStart=/usr/local/bin/docker-compose up -d
+ExecStop=/usr/local/bin/docker-compose down
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+
+# Author : rub3ck0r3
