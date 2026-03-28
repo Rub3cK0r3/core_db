@@ -8,3 +8,9 @@ under `core.async_lib.collector.main`.
 
 from core.async_lib.collector.main import AsyncCollector as Collector
 
+# ---------------------------------------------------------
+# © 2026 Rub3ck0r3 — Open Source (MIT License)
+# Permission is granted to use, copy, modify, and distribute
+# this software under the terms of the MIT License.
+# See https://opensource.org/licenses/MIT for details.
+# ---------------------------------------------------------

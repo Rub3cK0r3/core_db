@@ -5,12 +5,12 @@ services:
     environment:
       POSTGRES_USER: devuser
       POSTGRES_PASSWORD: devpass
-      POSTGRES_DB: coredb
+      POSTGRES_DB: eventdb 
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../db/init-scripts:/docker-entrypoint-initdb.d
+      - ../db/init:/docker-entrypoint-initdb.d
 
   backend:
     build:
@@ -20,7 +20,7 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgresql://devuser:devpass@db:5432/coredb
+      DATABASE_URL: postgresql://devuser:devpass@db:5432/eventdb
       SECRET_KEY: dev-secret-key
     ports:
       - "8000:8000"
@@ -33,7 +33,7 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgresql://devuser:devpass@db:5432/coredb
+      DATABASE_URL: postgresql://devuser:devpass@db:5432/eventdb
     ports:
       - "8001:8001"
 
@@ -45,7 +45,7 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgresql://devuser:devpass@db:5432/coredb
+      DATABASE_URL: postgresql://devuser:devpass@db:5432/eventdb
     ports:
       - "8002:8002"
 
@@ -57,7 +57,7 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgresql://devuser:devpass@db:5432/coredb
+      DATABASE_URL: postgresql://devuser:devpass@db:5432/eventdb
     ports:
       - "8003:8003"
 

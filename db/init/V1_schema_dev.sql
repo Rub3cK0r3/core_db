@@ -9,7 +9,7 @@
 -- this is the part of the implementation that is recommended for secure database in production.
 
 -- The main application database is created by the container
--- via POSTGRES_DB (see docker-compose). We assume that is `coredb`
+-- via POSTGRES_DB (see docker-compose). We assume that is `eventdb`
 -- and operate inside that database.
 CREATE ROLE app_owner NOLOGIN;
 
@@ -29,10 +29,10 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO tester;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_user;
-GRANT CONNECT ON DATABASE coredb TO app_user;
+GRANT CONNECT ON DATABASE eventdb TO app_user;
 GRANT USAGE ON SCHEMA public TO app_user;
 
-GRANT CONNECT ON DATABASE coredb TO migrator;
+GRANT CONNECT ON DATABASE eventdb TO migrator;
 GRANT app_owner TO migrator;
 ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA public
 GRANT ALL ON TABLES TO migrator;

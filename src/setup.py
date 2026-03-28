@@ -33,3 +33,9 @@ def run_app():
 if __name__ == "__main__":
     run_app()
 
+# ---------------------------------------------------------
+# © 2026 Rub3ck0r3 — Open Source (MIT License)
+# Permission is granted to use, copy, modify, and distribute
+# this software under the terms of the MIT License.
+# See https://opensource.org/licenses/MIT for details.
+# ---------------------------------------------------------

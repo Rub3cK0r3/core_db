@@ -1,4 +1,4 @@
-# core_db – Sentinel-style Backend Monitoring
+# 3v3nTr4cer – Sentinel-style Backend Monitoring
 
 ![Python](https://img.shields.io/badge/python-3.11+-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
@@ -6,7 +6,7 @@
 
 > CLI-first system for backend event ingestion, processing, and alerting with a focus on security and auditability.
 
-`core_db` is a **backend-first framework** for handling **event-pipelines** in Python. It enables collecting events from enterprise systems, processing them asynchronously, storing secure logs, and generating alerts — all from the command line. Designed to be secure, deployable via Docker, with full traceability for auditing.
+`3v3nTr4cer` is a **backend-first framework** for handling **event-pipelines** in Python. It enables collecting events from enterprise systems, processing them asynchronously, storing secure logs, and generating alerts — all from the command line. Designed to be secure, deployable via Docker, with full traceability for auditing.
 
 ---
 
@@ -60,8 +60,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/Rub3cK0r3/core_db.git
-cd core_db
+git clone https://github.com/Rub3cK0r3/3v3nTr4cer.git
+cd 3v3nTr4cer
 
 # Create virtual environment
 python -m venv env
@@ -80,8 +80,8 @@ pip install -r deploy/requirements.txt
 
 ```bash
 # Clone the repository
-git clone https://github.com/Rub3cK0r3/core_db.git
-cd core_db
+git clone https://github.com/Rub3cK0r3/3v3nTr4cer.git
+cd 3v3nTr4cer
 
 # Start all services
 cd deploy
@@ -239,7 +239,7 @@ docker-compose down -v
 ## 📂 Project Structure
 
 ```
-core_db/
+3v3nTr4cer/
 ├── src/                    # Main source code
 │   ├── core/              # Core application modules
 │   │   ├── async_lib/     # Async processing library
@@ -301,8 +301,8 @@ We welcome contributions of any kind: code, documentation, tests, or ideas! 💜
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/core_db.git
-   cd core_db
+   git clone https://github.com/YOUR_USERNAME/3v3nTr4cer.git
+   cd 3v3nTr4cer
    ```
 3. **Create a branch** for your work:
    ```bash
@@ -353,7 +353,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
 ## 🔒 Security
 
-Security is a core focus of `core_db`:
+Security is a core focus of `3v3nTr4cer`:
 
 - **RBAC** – Role-based access control on all endpoints
 - **Tamper-Evident Logs** – Cryptographic integrity for audit logs
@@ -489,8 +489,8 @@ See [LICENSE](LICENSE) for full text.
 ## 💬 Support
 
 - **Documentation**: Check the `docs/` directory
-- **Issues**: [GitHub Issues](https://github.com/Rub3cK0r3/core_db/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Rub3cK0r3/core_db/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Rub3cK0r3/3v3nTr4cer/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Rub3cK0r3/3v3nTr4cer/discussions)
 
 ---
 

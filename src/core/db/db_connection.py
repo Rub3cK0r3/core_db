@@ -15,7 +15,7 @@ class DBConnection:
     def _create_connection(self) -> connection:
         conn = psycopg2.connect(
             host=os.environ.get("DB_HOST", "db"), # change to db for docker
-            database=os.environ.get("POSTGRES_DB", "coredb"),
+            database=os.environ.get("POSTGRES_DB", "eventdb"),
             user=os.environ.get("POSTGRES_USER", "devuser"),
             password=quote_plus(os.environ.get("POSTGRES_PASSWORD", "devpass")),
         )
