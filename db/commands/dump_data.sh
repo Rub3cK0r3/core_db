@@ -8,12 +8,8 @@
 # for optional even less hardcoding we added another
 # env variables 
 
-psql -U $POSTGRES_USER -d $POSTGRES_DB <<EOF
-COPY json_agg(
-  SELECT *
-  FROM events
-)
-TO $DUMP_FILEPATH;
-EOF
+sudo -u postgres psql -d $DB_NAME -t -A -c \
+"SELECT jsonb_pretty(jsonb_agg(to_jsonb(t))) FROM (SELECT * FROM events) t;"\
+> $DUMP_FILEPATH  
 
 # Author : rub3ck0r3
