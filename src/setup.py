@@ -5,11 +5,13 @@ from core.async_lib.async_manager import AsyncManager
 from core.backend.database import engine # or import your DB engine
 
 async def start_services():
+    # We initialize the processor with the engine defined in the API implementation
     processor = EventProcessor(engine)
 
     async_manager = AsyncManager(worker_count=4)
     await async_manager.start(processor.handle)
 
+    # We initialize the collector...
     collector = AsyncCollector(db_dsn=None, worker_count=4)
     collector.async_manager = async_manager
     collector.listener_task = asyncio.create_task(collector._listener_loop())

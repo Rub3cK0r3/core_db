@@ -9,23 +9,15 @@ import httpx
 # Importar AsyncManager como antes
 from core.async_lib.async_manager import AsyncManager
 
-# TODO: Require the fields that actually exist in the db, not just a mock, but for make examples
-# not so complicated we can handle this for now
 REQUIRED_EVENT_FIELDS = ["type", "payload"]
 
-
 class AsyncCollector:
-    """ 
-    Collector asíncrono que:
-        - Escucha eventos en PostgreSQL (NOTIFY)
-        - Inserta eventos en la DB
-        - Notifica en tiempo real a FastAPI vía WebSocket
-    """
-
     def __init__(self, db_dsn, fastapi_app=None, worker_count=4, max_queue_size=1000, backend_base_url: str | None = None):
+
         self.db_dsn = db_dsn
         self.db_pool = None
         self.listener_task = None
+
         self.async_manager = AsyncManager(
             worker_count=worker_count,
             max_queue_size=max_queue_size

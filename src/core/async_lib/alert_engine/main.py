@@ -3,8 +3,6 @@ import os
 import asyncpg
 import httpx
 
-# TODO: Require the fields that actually exist in the db, not just a mock, but for make examples
-# not so complicated we can handle this for now
 REQUIRED_ALERT_FIELDS = ["id", "severity", "resource"]
 
 # Severity ordering for threshold-based alerting

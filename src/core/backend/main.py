@@ -217,5 +217,5 @@ def ingest_pipeline_alert(payload: PipelineAlertIn, db: Session = Depends(get_db
     audit_logger.info(f"PIPELINE_ALERT id={alert.id} severity={alert.severity}")
     return alert
 
-# --- Create database tables (development only) ---
+# Create database tables (development only)
 Base.metadata.create_all(engine)
