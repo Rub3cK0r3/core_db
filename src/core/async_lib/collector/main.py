@@ -9,6 +9,8 @@ import httpx
 # Importar AsyncManager como antes
 from core.async_lib.async_manager import AsyncManager
 
+# TODO: Require the fields that actually exist in the db, not just a mock, but for make examples
+# not so complicated we can handle this for now
 REQUIRED_EVENT_FIELDS = ["type", "payload"]
 
 
@@ -35,7 +37,6 @@ class AsyncCollector:
         # Backend API base URL (para persistir eventos vía servicio)
         self.backend_base_url = backend_base_url or os.getenv("BACKEND_BASE_URL", "http://backend:8000")
 
-    # --- INICIO ---
     async def start(self):
         """Inicializa DB pool, workers y listener de eventos"""
         self.db_pool = await asyncpg.create_pool(dsn=self.db_dsn)
@@ -48,7 +49,6 @@ class AsyncCollector:
         self.listener_task = asyncio.create_task(self._listener_loop())
         print("AsyncCollector started.")
 
-    # --- LISTENER LOOP ---
     async def _listener_loop(self):
         """Escucha canal 'events_channel' en PostgreSQL"""
         while not self.async_manager.shutdown_event.is_set():
@@ -63,7 +63,6 @@ class AsyncCollector:
                 print("Listener error:", e)
                 await asyncio.sleep(2)  # retry lento
 
-    # --- CALLBACK ---
     def _notify_callback(self, connection, pid, channel, payload):
         """Se ejecuta al recibir NOTIFY desde PostgreSQL"""
         try:
@@ -79,13 +78,11 @@ class AsyncCollector:
         except json.JSONDecodeError:
             print("Invalid JSON payload:", payload)
 
-    # --- PROCESAMIENTO DE EVENTO ---
     async def _process_event(self, event):
         """Procesa un evento: persiste vía API y notifica FastAPI WebSocket"""
         await self._insert_event_api(event)
         await self._notify_fastapi(event)
 
-    # Inserción vía API
     async def _insert_event_api(self, event):
         try:
             async with httpx.AsyncClient(base_url=self.backend_base_url, timeout=5.0) as client:
@@ -101,7 +98,6 @@ class AsyncCollector:
         except Exception as e:
             print("API write failed for event:", event, "Error:", e)
 
-    # Notificación en FastAPI WebSocket
     async def _notify_fastapi(self, event):
         """Envia el evento a todos los WebSockets conectados en FastAPI"""
         if not self.fastapi_app:
@@ -114,11 +110,9 @@ class AsyncCollector:
             except Exception as e:
                 print("Error enviando evento a websocket:", e)
 
-    # --- VALIDACIÓN ---
     def _validate_event(self, event):
         return all(field in event for field in REQUIRED_EVENT_FIELDS)
 
-    # --- SHUTDOWN ---
     async def stop(self):
         """Apaga listener, workers y DB pool"""
         print("Collector stopping...")
@@ -139,14 +133,13 @@ class AsyncCollector:
         print("Collector stopped gracefully.")
 
 
-# --- EJEMPLO DE EJECUCIÓN ---
 async def main():
     from fastapi import FastAPI
 
     app = FastAPI()
     app.active_connections = []  # lista de WebSockets para notificaciones
 
-    db_dsn = os.getenv("DATABASE_URL", "postgresql://devuser:devpass@db:5432/coredb")
+    db_dsn = os.getenv("DATABASE_URL", "postgresql://devuser:devpass@db:5432/eventdb")
 
     collector = AsyncCollector(
         db_dsn=db_dsn,

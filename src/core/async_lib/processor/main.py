@@ -3,8 +3,9 @@ import os
 import asyncpg
 import httpx
 
+# TODO: Require the fields that actually exist in the db, not just a mock, but for make examples
+# not so complicated we can handle this for now
 REQUIRED_EVENT_FIELDS = ["id", "app_name", "type", "payload"]
-
 
 class EventProcessor:
     """
@@ -33,7 +34,6 @@ class EventProcessor:
         self.db_pool = db_pool
         self.backend_base_url = backend_base_url or os.getenv("BACKEND_BASE_URL", "http://backend:8000")
 
-    # PUBLIC ENTRY POINT
     async def handle(self, event: dict):
         """
         Main processing entry point used by AsyncManager workers.
@@ -47,7 +47,6 @@ class EventProcessor:
 
         await self._insert_event(event)
 
-    # API INSERT
     async def _insert_event(self, event: dict):
         """
         Persists an event by calling the internal backend API instead of
@@ -69,7 +68,6 @@ class EventProcessor:
         except Exception as e:
             print(f"API write failed for event {event.get('id')}: {e}")
 
-    # VALIDATION
     def _validate_event(self, event: dict) -> bool:
         """
         Validates that an event contains all required fields.

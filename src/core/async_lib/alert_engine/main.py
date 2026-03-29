@@ -3,6 +3,8 @@ import os
 import asyncpg
 import httpx
 
+# TODO: Require the fields that actually exist in the db, not just a mock, but for make examples
+# not so complicated we can handle this for now
 REQUIRED_ALERT_FIELDS = ["id", "severity", "resource"]
 
 # Severity ordering for threshold-based alerting
@@ -41,7 +43,6 @@ class AlertManager:
         self.db_pool = db_pool
         self.backend_base_url = backend_base_url or os.getenv("BACKEND_BASE_URL", "http://backend:8000")
 
-    # PUBLIC ENTRY POINT
     async def handle(self, alert: dict):
         """
         Main processing entry point used by AsyncManager workers.
@@ -55,7 +56,6 @@ class AlertManager:
 
         await self._process_alert(alert)
 
-    # API INSERT
     async def _process_alert(self, alert: dict):
         """
         Processes an alert by sending it to the backend API when it
@@ -96,7 +96,6 @@ class AlertManager:
         except Exception as e:
             print(f"API write failed for alert {alert.get('id')}: {e}")
 
-    # VALIDATION
     def _validate_alert(self, alert: dict) -> bool:
         """
         Validates that an alert contains all required fields.
