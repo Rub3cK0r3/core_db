@@ -3,6 +3,7 @@ import os
 import asyncpg
 import httpx
 
+# Sanity checks in this frontier too...
 REQUIRED_ALERT_FIELDS = ["id", "severity", "resource"]
 
 # Severity ordering for threshold-based alerting
@@ -16,38 +17,28 @@ SEVERITY_LEVELS = {
 
 
 class AlertManager:
-    """
-    Handles asynchronous processing of alert events.
-
-    Responsibilities:
-        - Validate incoming alerts.
-        - Persist critical alerts ('error' or 'fatal') via the backend API.
-
-    This class does NOT manage:
-        - Async workers
-        - Queues
-        - PostgreSQL listeners
-        - Application lifecycle
-    """
+    # Handles asynchronous processing of alert events.
+    # Responsibilities:
+    #     - Validate incoming alerts.
+    #     - Persist critical alerts ('error' or 'fatal') via the backend API.
+    # This class does NOT manage:
+    #     - Async workers
+    #     - Queues
+    #     - PostgreSQL listeners
+    #     - Application lifecycle
 
     def __init__(self, db_pool: asyncpg.pool.Pool | None = None, backend_base_url: str | None = None):
-        """
-        Initializes the AlertManager.
-
-        Args:
-            db_pool (asyncpg.pool.Pool | None): Kept for backwards compatibility but no longer used.
-            backend_base_url (str | None): Base URL of the backend API.
-        """
+        # Initializes the AlertManager.
+        # Args:
+        #     db_pool (asyncpg.pool.Pool | None): Kept for backwards compatibility but no longer used.
+        #     backend_base_url (str | None): Base URL of the backend API.
         self.db_pool = db_pool
         self.backend_base_url = backend_base_url or os.getenv("BACKEND_BASE_URL", "http://backend:8000")
 
     async def handle(self, alert: dict):
-        """
-        Main processing entry point used by AsyncManager workers.
-
-        Args:
-            alert (dict): Incoming alert dictionary.
-        """
+        # Main processing entry point used by AsyncManager workers.
+        # Args:
+        #     alert (dict): Incoming alert dictionary.
         if not self._validate_alert(alert):
             print("Invalid alert, skipping:", alert)
             return
@@ -55,16 +46,13 @@ class AlertManager:
         await self._process_alert(alert)
 
     async def _process_alert(self, alert: dict):
-        """
-        Processes an alert by sending it to the backend API when it
-        meets the configured severity threshold.
-
-        Threshold configuration:
-            - Environment variable `ALERT_MIN_SEVERITY` controls the
-              minimum severity that should trigger an alert.
-            - Default: "error".
-            - Ordering is defined in SEVERITY_LEVELS.
-        """
+        # Processes an alert by sending it to the backend API when it
+        # meets the configured severity threshold.
+        # Threshold configuration:
+        #     - Environment variable `ALERT_MIN_SEVERITY` controls the
+        #       minimum severity that should trigger an alert.
+        #     - Default: "error".
+        #     - Ordering is defined in SEVERITY_LEVELS.
         try:
             severity = (alert.get("severity") or "").lower()
             current_level = SEVERITY_LEVELS.get(severity)
@@ -95,14 +83,9 @@ class AlertManager:
             print(f"API write failed for alert {alert.get('id')}: {e}")
 
     def _validate_alert(self, alert: dict) -> bool:
-        """
-        Validates that an alert contains all required fields.
-
-        Args:
-            alert (dict): Alert to validate.
-
-        Returns:
-            bool: True if all required fields are present, False otherwise.
-        """
+        # Validates that an alert contains all required fields.
+        # Args:
+        #     alert (dict): Alert to validate.
+        # Returns:
+        #     bool: True if all required fields are present, False otherwise.
         return all(field in alert for field in REQUIRED_ALERT_FIELDS)
-
