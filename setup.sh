@@ -18,6 +18,9 @@ echo ".##.....##...##.##...##.....##.##...###....##....##....##........##..##...
 echo "..#######.....###.....#######..##....##....##....##.....##.......##...######..########.##.....##";
 echo "";
 echo "[ © rub3ck0r3 ]";
+echo "################################################################################################";
+echo "SRC_DIR : $SRC_DIR"
+echo "################################################################################################";
 
 if [ -f $SRC_DIR/logs.txt ]; then
   echo "You already have logs for this tool in your system..";
@@ -32,10 +35,16 @@ sleep 2;
 
 # We go to the deploy/ SubDirectory located in the project root Directory
 echo "Going to deploy SubDirectory from the Tool Root Directory";
-cd $SRC_DIR/deploy/ 2> logs.txt;
+cd $SRC_DIR/deploy/ 2> $SRC_DIR/logs.txt;
 
 # We execute docker-compose to run all the containers needed in the tool
 # WARNING: development only
 
 echo "Running all the containers.."
-docker compose up -d 2> logs.txt
+docker compose up -d 2>&1 | tee $SRC_DIR/logs.txt;
+
+# TODO: Show where it is running to be able to kill the process
+
+######################
+# Author : Rub3ck0r3 #
+######################
