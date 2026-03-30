@@ -11,7 +11,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import JSONB
 from .base import Base
 
-
 class Event(Base):
     __tablename__ = "events"
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
@@ -37,7 +36,6 @@ class Event(Base):
     endpoint_user_agent: Mapped[str | None] = mapped_column(Text)
     endpoint_device_type: Mapped[str | None] = mapped_column(String(20))
 
-
 Index("idx_severity", Event.severity)
 Index("idx_app_name", Event.app_name)
 Index("idx_app_stage", Event.app_stage)
@@ -53,7 +51,6 @@ class Alert(Base):
     resource: Mapped[str | None] = mapped_column(Text)
     payload: Mapped[dict | None] = mapped_column(JSONB)
     created_at: Mapped[int] = mapped_column(BigInteger, nullable=False)
-
 
 class User(Base):
     __tablename__ = "users"

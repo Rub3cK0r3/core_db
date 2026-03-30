@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, patch
 from alert_engine.main import AlertManager
 from core.async_lib.alert_engine.main import AlertManager as AsyncAlertManager
 
-
 class TestAlertManagerValidation(unittest.TestCase):
     def test_validate_alert(self):
         am = AlertManager()
@@ -15,7 +14,6 @@ class TestAlertManagerValidation(unittest.TestCase):
 
         self.assertTrue(am._validate_alert(valid_alert))
         self.assertFalse(am._validate_alert(invalid_alert))
-
 
 class TestAsyncAlertManagerThresholds(unittest.TestCase):
     def setUp(self):
@@ -74,7 +72,5 @@ class TestAsyncAlertManagerThresholds(unittest.TestCase):
         # With threshold "warning", only warning and higher should trigger
         self.assertEqual(mock_client.post.call_count, 1)
 
-
 if __name__ == "__main__":
     unittest.main()
-

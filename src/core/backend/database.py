@@ -2,12 +2,9 @@ from sqlmodel import create_engine
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
 import os
-
-"""
-The Database data should always
-be loaded from your execution environment.
-Please, bear that in mind.
-"""
+# The Database data should always
+# be loaded from your execution environment.
+# Please, bear that in mind.
 
 # I load the .env used in the docker compose deployment..
 load_dotenv(dotenv_path='../../db/.env')

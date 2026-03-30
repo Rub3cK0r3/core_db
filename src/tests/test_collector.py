@@ -1,8 +1,5 @@
 import unittest
-
 from core.async_lib.collector.main import AsyncCollector, REQUIRED_EVENT_FIELDS
-
-
 class TestCollectorValidation(unittest.TestCase):
     def test_validate_event_success(self):
         # db_dsn is required by the async implementation but unused for validation
@@ -30,7 +27,5 @@ class TestCollectorValidation(unittest.TestCase):
         self.assertIn("type", REQUIRED_EVENT_FIELDS)
         self.assertIn("payload", REQUIRED_EVENT_FIELDS)
 
-
 if __name__ == "__main__":
     unittest.main()
-

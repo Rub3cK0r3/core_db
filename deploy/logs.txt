@@ -1,0 +1,3 @@
+[?25l[0G[+] up 1/1
+ [31m[1m✘[0m Contain... [31m[1mError response from daemon: Conflict. The container name "/db" is already in use by container "b9b5074b59283ae9bcd2063a0a5e8fcd981bf549ca3e8a07fea425a8f99abcbc". You have to remove (or rename) that container to be able to reuse that name.[0m [34m0.0s[0m
+[?25hError response from daemon: Conflict. The container name "/db" is already in use by container "b9b5074b59283ae9bcd2063a0a5e8fcd981bf549ca3e8a07fea425a8f99abcbc". You have to remove (or rename) that container to be able to reuse that name.

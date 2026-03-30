@@ -10,10 +10,10 @@ from collector.main import Collector
 from processor.main import Processor
 from alert_engine.main import AlertManager
 
-NUM_EVENTS = 5000         # total eventos a generar
-NUM_ALERTS = 500          # total alertas críticas
-WORKER_COUNT = 4           # threads de Processor
-ALERT_WORKERS = 2          # threads de AlertManager
+NUM_EVENTS = 5000 
+NUM_ALERTS = 500          
+WORKER_COUNT = 4           
+ALERT_WORKERS = 2          
 
 APP_NAMES = ["Pizzeria Frontend", "Pizzeria Backend", "Pizzeria Mobile"]
 SEVERITIES = ["debug", "info", "warning", "error", "fatal"]
@@ -57,7 +57,7 @@ def generate_alert(i):
     }
 
 if __name__ == "__main__":
-    print("=== Starting Load Simulation ===")
+    print("Starting Load Simulation")
 
     collector = Collector(max_queue_size=NUM_EVENTS)
     processor = Processor(worker_count=WORKER_COUNT)
@@ -91,5 +91,5 @@ if __name__ == "__main__":
     alert_manager.stop()
     collector.stop()
 
-    print("=== Load Simulation completed successfully! ===")
+    print("Load Simulation completed successfully!")
 

@@ -1,6 +1,5 @@
 import unittest
 from processor.main import Processor
-
 class TestProcessor(unittest.TestCase):
     def test_validate_event(self):
         processor = Processor()
@@ -12,4 +11,3 @@ class TestProcessor(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

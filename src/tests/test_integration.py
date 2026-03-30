@@ -1,12 +1,9 @@
 import asyncio
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
-
 from core.async_lib.async_manager import AsyncManager
 from core.async_lib.processor.main import EventProcessor
 from core.async_lib.alert_engine.main import AlertManager as AsyncAlertManager
-
-
 class TestAsyncPipelineIntegration(unittest.TestCase):
 
     def _run(self, coro):
@@ -62,7 +59,6 @@ class TestAsyncPipelineIntegration(unittest.TestCase):
         
         self.assertEqual(len(alert_calls), 3, f"Expected 3 alert calls, got {len(alert_calls)}")
         self.assertGreaterEqual(len(event_calls), 5, f"Expected at least 5 event calls, got {len(event_calls)}")
-
 
 if __name__ == "__main__":
     unittest.main()

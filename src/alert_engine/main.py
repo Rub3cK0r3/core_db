@@ -1,22 +1,16 @@
-"""
-Compatibility wrapper for the async alert manager implementation.
-
-Tests and some legacy code expect `alert_engine.main.AlertManager`. This module
-bridges that name to the modern async implementation under
-`core.async_lib.alert_engine.main`.
-"""
-
+# Compatibility wrapper for the async alert manager implementation.
+#
+# Tests and some legacy code expect `alert_engine.main.AlertManager`. This module
+# bridges that name to the modern async implementation under
+# `core.async_lib.alert_engine.main`.
 from typing import Any, Dict
 
 from core.async_lib.alert_engine.main import AlertManager as _AsyncAlertManager
 from core.async_lib.alert_engine.main import REQUIRED_ALERT_FIELDS
 
-
 class AlertManager:
-    """
-    Lightweight façade delegated to the async implementation for validation
-    logic, keeping the public surface expected by existing tests.
-    """
+    # Lightweight façade delegated to the async implementation for validation
+    # logic, keeping the public surface expected by existing tests.
 
     def __init__(self, worker_count: int = 1):
         self.worker_count = worker_count
