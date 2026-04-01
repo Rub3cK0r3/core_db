@@ -235,16 +235,7 @@ python -m unittest discover -s tests -p "test_*.py"
 
 MIT License. See [LICENSE](LICENSE).
 
-## 8. Recommended badges
-
-Add these badges in the top README line(s), replacing owner/repo and workflow names:
-
-- Build: `https://img.shields.io/github/actions/workflow/status/<owner>/<repo>/ci.yml`
-- Coverage: `https://img.shields.io/codecov/c/gh/<owner>/<repo>`
-- Version: `https://img.shields.io/github/v/tag/<owner>/<repo>`
-- GitHub Actions: `https://img.shields.io/github/actions/workflow/status/<owner>/<repo>/deploy.yml`
-
-## 9. Project structure
+## 8. Project structure
 
 ```
 3v3nTr4cer/
