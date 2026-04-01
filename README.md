@@ -1,505 +1,253 @@
-# 3v3nTr4cer – Sentinel-style Backend Monitoring
+# 3v3nTr4cer
 
-![Python](https://img.shields.io/badge/python-3.11+-blue)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-in%20development-orange)
 
-> CLI-first system for backend event ingestion, processing, and alerting with a focus on security and auditability.
+## 1. Project name and overview
 
-`3v3nTr4cer` is a **backend-first framework** for handling **event-pipelines** in Python. It enables collecting events from enterprise systems, processing them asynchronously, storing secure logs, and generating alerts — all from the command line. Designed to be secure, deployable via Docker, with full traceability for auditing.
+**3v3nTr4cer** is a sentinel-style, backend-first event pipeline framework built in Python. It ships with:
 
----
+- REST API with FastAPI and JWT authentication
+- Asynchronous collector, processor and alert engine
+- PostgreSQL persistence for events and alerts
+- Event normalization, rules-based alerting and audit logs
+- Docker Compose orchestrator for full stack deployment
 
-## 📋 Table of Contents
+The system is designed for security, traceability and auditability, suitable for log-based monitoring and SIEM-style setups.
 
-- [Features](#-features)
-- [Requirements](#-requirements)
-- [Installation](#-installation)
-- [Quick Start](#-quick-start)
-- [Usage Examples](#-usage-examples)
-- [Project Structure](#-project-structure)
-- [Configuration](#-configuration)
-- [Contributing](#-contributing)
-- [Security](#-security)
-- [License](#-license)
+## 2. Technologies used
 
----
+- Python 3.11+ (project code), Python 3.12 in Docker images
+- FastAPI, Uvicorn
+- SQLModel, SQLAlchemy
+- PostgreSQL
+- asyncpg, httpx
+- python-jose (JWT), passlib[bcrypt]
+- python-dotenv
+- pydantic
+- Docker, Docker Compose
+- Unit tests with built-in `unittest` and `unittest.mock`
 
-## ✨ Features
+## 3. Installation step-by-step
 
-- **Asynchronous Event Ingestion** – Reliable async event collection
-- **Event Normalization & Processing** – Transform and process events in real-time
-- **Secure PostgreSQL Storage** – Tamper-evident logging with SQLAlchemy/SQLModel
-- **Configurable Alert Engine** – CLI alerts, email simulation, SIEM hooks
-- **RBAC on All Endpoints** – Role-based access control built-in
-- **Docker & Kubernetes Ready** – Deploy with Docker Compose or K8s
-- **Security-First Design** – Pentesting and hardening from day one
-
----
-
-## 📋 Requirements
-
-### System Requirements
-
-- **Python**: 3.11 or higher
-- **PostgreSQL**: 14 or higher (or use Docker)
-- **Docker**: 20.10+ (optional, for containerized deployment)
-- **Docker Compose**: 2.0+ (optional)
-
-### Supported Platforms
-
-- Linux (Ubuntu 20.04+, Debian 11+, CentOS 8+)
-- macOS (12.0+)
-- Windows 10/11 (with WSL2 recommended)
-
----
-
-## 🚀 Installation
-
-### Option 1: Local Installation
+### 3.1 Clone repository
 
 ```bash
-# Clone the repository
 git clone https://github.com/Rub3cK0r3/3v3nTr4cer.git
 cd 3v3nTr4cer
-
-# Create virtual environment
-python -m venv env
-
-# Activate virtual environment
-# Linux/macOS:
-source env/bin/activate
-# Windows:
-env\Scripts\activate
-
-# Install dependencies
-pip install -r deploy/requirements.txt
 ```
 
-### Option 2: Docker Installation (Recommended)
-
-```bash
-# Clone the repository
-git clone https://github.com/Rub3cK0r3/3v3nTr4cer.git
-cd 3v3nTr4cer
-
-# Start all services
-cd deploy
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-```
-
-### Verify Installation
-
-```bash
-# Check Python version
-python --version  # Should be 3.11+
-
-# Test imports
-python -c "from core.async_lib.async_manager import AsyncManager; print('✓ Import successful')"
-```
-
----
-
-## ⚡ Quick Start
-
-### 1. Set Up Database (Local Installation)
-
-```bash
-# Create PostgreSQL database
-createdb coredb
-
-# Or use Docker
- docker run -d \
-   --name core_db_postgres \
-   -e POSTGRES_USER=devuser \
-   -e POSTGRES_PASSWORD=devpass \
-   -e POSTGRES_DB=coredb \
-   -p 5432:5432 \
-   postgres:16
-```
-
-### 2. Configure Environment
-
-```bash
-cd src
-
-# Copy environment template (if available)
-cp .env/.env.example .env/.env.local
-
-# Edit configuration
-export DATABASE_URL="postgresql://devuser:devpass@localhost:5432/coredb"
-export SECRET_KEY="your-secret-key-here"
-```
-
-### 3. Run the Application
-
-```bash
-export PYTHONPATH=src
-python src/setup.py
-```
-
----
-
-## 📖 Usage Examples
-
-### Basic Event Processing
-
-```python
-import asyncio
-from core.async_lib.async_manager import AsyncManager
-
-async def main():
-    # Initialize async manager with 4 workers
-    async_manager = AsyncManager(worker_count=4)
-    
-    # Define event handler
-    async def handle_event(data):
-        print(f"Processing event: {data}")
-    
-    # Start workers
-    await async_manager.start(handle_event)
-    
-    # Enqueue events
-    await async_manager.enqueue({"type": "user_login", "user_id": 123})
-    await async_manager.enqueue({"type": "transaction", "amount": 99.99})
-    
-    # Graceful shutdown
-    await asyncio.sleep(2)
-    await async_manager.stop()
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-### Full Pipeline Setup
-
-```python
-import asyncio
-from core.async_lib.collector.main import AsyncCollector
-from core.async_lib.processor.main import EventProcessor
-from core.async_lib.async_manager import AsyncManager
-from core.backend.database import engine
-
-async def start_services():
-    # Initialize components
-    processor = EventProcessor(engine)
-    async_manager = AsyncManager(worker_count=4)
-    
-    # Start async manager with processor
-    await async_manager.start(processor.handle)
-    
-    # Initialize collector
-    collector = AsyncCollector(db_dsn=None, worker_count=4)
-    collector.async_manager = async_manager
-    collector.listener_task = asyncio.create_task(collector._listener_loop())
-    
-    print("✓ All services started. Running forever...")
-    
-    try:
-        await asyncio.Event().wait()
-    except asyncio.CancelledError:
-        print("Stopping services...")
-        collector.listener_task.cancel()
-        try:
-            await collector.listener_task
-        except asyncio.CancelledError:
-            pass
-        await async_manager.stop()
-
-def run_app():
-    asyncio.run(start_services())
-
-if __name__ == "__main__":
-    run_app()
-```
-
-### Docker Compose Usage
-
-```bash
-# Start all services
-cd deploy
-docker-compose up -d
-
-# View specific service logs
-docker-compose logs -f backend
-docker-compose logs -f collector
-
-# Stop all services
-docker-compose down
-
-# Stop and remove volumes (clean slate)
-docker-compose down -v
-```
-
----
-
-## 📂 Project Structure
-
-```
-3v3nTr4cer/
-├── src/                    # Main source code
-│   ├── core/              # Core application modules
-│   │   ├── async_lib/     # Async processing library
-│   │   │   ├── async_manager.py    # Task queue manager
-│   │   │   ├── collector/          # Event collector
-│   │   │   ├── processor/          # Event processor
-│   │   │   └── alert_engine/       # Alert system
-│   │   ├── backend/       # Backend API and database
-│   │   ├── db/            # Database models and migrations
-│   │   └── logs/          # Logging utilities
-│   ├── setup.py           # Application entry point
-│   └── .env/              # Environment and dependencies
-├── deploy/                # Deployment configurations
-│   ├── compose.yml        # Docker Compose setup
-│   ├── docker/            # Dockerfiles for services
-│   └── requirements.txt   # Python dependencies
-├── db/                    # Database scripts and migrations
-├── docs/                  # Documentation
-│   ├── plan/              # Project planning documents
-│   └── refs/              # Reference materials
-├── tests/                 # Test suite
-├── CONTRIBUTING.md        # Contribution guidelines
-├── LICENSE                # MIT License
-└── README.md              # This file
-```
-
----
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://devuser:devpass@db:5432/coredb` |
-| `SECRET_KEY` | Secret key for encryption | `dev-secret-key` |
-| `LOG_LEVEL` | Logging level (DEBUG, INFO, WARNING, ERROR) | `INFO` |
-| `WORKER_COUNT` | Number of async workers | `4` |
-| `MAX_QUEUE_SIZE` | Maximum event queue size | `1000` |
-
-### Docker Services
-
-| Service | Port | Description |
-|---------|------|-------------|
-| `db` | 5432 | PostgreSQL database |
-| `backend` | 8000 | Main backend API |
-| `collector` | 8001 | Event collector service |
-| `processor` | 8002 | Event processor service |
-| `alert_engine` | 8003 | Alert engine service |
-
----
-
-## 🤝 Contributing
-
-We welcome contributions of any kind: code, documentation, tests, or ideas! 💜
-
-### Getting Started
-
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/3v3nTr4cer.git
-   cd 3v3nTr4cer
-   ```
-3. **Create a branch** for your work:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-4. **Make your changes** and commit:
-   ```bash
-   git commit -am "Add: your feature description"
-   ```
-5. **Push to your fork**:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-6. **Open a Pull Request** on GitHub
-
-### Development Guidelines
-
-- Follow **PEP 8** style guide for Python code
-- Write clear, atomic commits with descriptive messages
-- Add tests for new functionality
-- Update documentation for API changes
-- Reference related issues in PRs (`Closes #123`)
-
-### Running Tests
-
-```bash
-# Run unit tests
-pytest
-
-# Run with coverage
-pytest --cov=src
-
-# Run integration tests (requires Docker)
-docker-compose -f deploy/compose.yml up -d
-pytest tests/integration/
-```
-
-### Reporting Issues
-
-- Use **GitHub Issues** for bug reports and feature requests
-- Provide clear reproduction steps for bugs
-- Include relevant logs and screenshots
-- Look for `good first issue` or `help wanted` labels to get started
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
-
----
-
-## 🔒 Security
-
-Security is a core focus of `3v3nTr4cer`:
-
-- **RBAC** – Role-based access control on all endpoints
-- **Tamper-Evident Logs** – Cryptographic integrity for audit logs
-- **Input Validation** – Protection against injection attacks
-- **Anomaly Detection** – Suspicious event pattern detection
-- **Container Security** – Regular pentesting and hardening
-
-### Reporting Security Issues
-
-Please report security vulnerabilities privately via GitHub Security Advisories or email the maintainers directly. Do not open public issues for security bugs.
-
----
-
-## 🗺️ Roadmap
-
-### Level 0 — It Runs ✅
-- Event Collector + DB Storage
-- `docker compose up` with basic `curl` testing
-
-### Level 1 — MVP ✅
-- Processor + Alert Engine
-- RBAC and auditable logs (baseline)
-- Async pipeline with API-based persistence
-
-### Level 2 — Pro 📋
-- Multi-container orchestration
-- SIEM hooks integration
-- High ingestion rate (>1000 events/min)
-
-### Level 3 — Hardening & Pentesting 📋
-- Comprehensive unit/integration tests
-- Fuzzing and simulated attacks
-- Log tampering detection
-
----
-
-## 🧪 Quality & CI
-
-### Tests
-
-The repository includes a small but focused test suite:
-
-- **Unit tests** for:
-  - Event validation (`Processor` / `EventProcessor`)
-  - Alert validation and thresholds (`AlertManager`)
-  - Collector event validation (`AsyncCollector`)
-- **Integration-style test** for the async pipeline:
-  - `AsyncManager` → `EventProcessor` → backend API (mocked)
-  - `AsyncAlertManager` → backend API (mocked)
-
-Run locally:
+### 3.2 Option A: Local Python install
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate  # macOS/Linux
+# .venv\Scripts\activate  # Windows
+pip install --upgrade pip
 pip install -r deploy/requirements.txt
-pip install pytest
-
-export PYTHONPATH=src
-pytest src/tests -q
 ```
 
-### Continuous Integration (GitHub Actions)
-
-A minimal CI pipeline is defined under `.github/workflows/ci.yml`:
-
-- Python 3.11
-- Install dependencies from `deploy/requirements.txt`
-- Run `pytest src/tests -q` with `PYTHONPATH=src`
-
-Every push or pull request to `main`/`master` runs this pipeline to keep the MVP stable.
-
----
-
-## 🎛️ Alert Configuration (MVP)
-
-The alert engine is designed to be **severity-driven** with a simple, declarative threshold:
-
-- Supported severities (ordered): `debug < info < warning < error < fatal`
-- Environment variable: `ALERT_MIN_SEVERITY`
-  - Default: `"error"`
-  - Any alert with severity **below** this threshold is ignored by the API writer.
-
-### Examples
-
-#### Default behavior (no environment variable)
+### 3.3 Option B: Docker (recommended)
 
 ```bash
-export PYTHONPATH=src
-python - << 'EOF'
-from core.async_lib.alert_engine.main import AlertManager
-import asyncio
-
-async def main():
-    am = AlertManager()
-    await am.handle({"id": "1", "severity": "error", "resource": "/api", "payload": {}})
-    await am.handle({"id": "2", "severity": "info", "resource": "/api", "payload": {}})
-
-asyncio.run(main())
-EOF
+cd deploy
+docker compose up -d
 ```
 
-- `"error"` is sent to `/internal/pipeline/alerts`.
-- `"info"` is ignored (below default `"error"` threshold).
-
-#### Raise sensitivity to `warning`
+Check service status:
 
 ```bash
-export ALERT_MIN_SEVERITY=warning
-export PYTHONPATH=src
+docker compose ps
 ```
 
-Now all `warning`, `error`, and `fatal` alerts will trigger the API writer.
-
-#### Lock-down mode (only fatal)
+Stop services:
 
 ```bash
-export ALERT_MIN_SEVERITY=fatal
+docker compose down -v
 ```
 
-Only `fatal` alerts will be persisted via the alert engine.
+### 3.4 Database initialization
 
----
+The Docker Compose service `db` already provisions `eventdb` and initializes `db/init/V1_schema_dev.sql`.
 
-## 📝 License
+For local PostgreSQL:
 
-MIT License © 2026
+```bash
+createdb eventdb
+psql -d eventdb -f db/init/V1_schema_dev.sql
+```
 
-See [LICENSE](LICENSE) for full text.
+### 3.5 Environment variables (optional)
 
----
+```bash
+export POSTGRES_USER=devuser
+export POSTGRES_PASSWORD=devpass
+export POSTGRES_DB=eventdb
+export DB_HOST=localhost
+export DATABASE_URL="postgresql://devuser:devpass@localhost:5432/eventdb"
+export SECRET_KEY="your-secret-key"
+export ALERT_MIN_SEVERITY="error"
+```
 
-## 💬 Support
+## 4. Usage with examples and commands
 
-- **Documentation**: Check the `docs/` directory
-- **Issues**: [GitHub Issues](https://github.com/Rub3cK0r3/3v3nTr4cer/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Rub3cK0r3/3v3nTr4cer/discussions)
+### 4.1 Start manual components (non-Docker)
 
----
+```bash
+export PYTHONPATH=src:$PYTHONPATH
+uvicorn core.backend.main:app --host 0.0.0.0 --port 8000
+python -m core.async_lib.collector.main
+python -m core.async_lib.processor.main
+python -m core.async_lib.alert_engine.main
+```
 
-<p align="start">
-  Built with 🔒 security and ⚡ performance in mind.
-</p>
+### 4.2 Authenticate & token endpoint
 
----
+1. Ensure a user exists in `users` table (with hashed password).  
+2. Request token:
 
-<p align="start">
-  Copyright (c) 2026 <b>Rub3ck0r3</b>.
-</p>
+```bash
+curl -X POST "http://localhost:8000/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin&password=secret"
+```
+
+Response:
+
+```json
+{
+  "access_token": "...",
+  "token_type": "bearer"
+}
+```
+
+### 4.3 API endpoints (requires Bearer token)
+
+- `GET /v1/events` – list events
+- `GET /v1/events/{event_id}` – get a single event
+- `POST /v1/events` – create event
+- `POST /internal/pipeline/events` – ingest pipeline event
+- `POST /internal/pipeline/alerts` – ingest pipeline alert
+
+#### Example create event request
+
+```bash
+curl -X POST "http://localhost:8000/v1/events" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "severity": "info",
+    "timestamp": 1700000000000,
+    "app_name": "my-app",
+    "endpoint_id": "client-123"
+  }'
+```
+
+### 4.4 Internal pipeline example
+
+```bash
+curl -X POST "http://localhost:8000/internal/pipeline/events" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "event",
+    "payload": {"id":"evt-100","app_name":"my-app","endpoint_id":"client-123","timestamp":1700000000000}
+  }'
+```
+
+```bash
+curl -X POST "http://localhost:8000/internal/pipeline/alerts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "severity": "error",
+    "resource": "service-A",
+    "payload": {"id":"alert-1","message":"error triggered"}
+  }'
+```
+
+## 5. Contribution and collaborators guide
+
+### 5.1 Workflow
+
+1. Fork repo
+2. Create branch `feature/<name>` or `fix/<name>`
+3. Implement changes and tests
+4. Run tests
+5. Submit PR with description and context
+
+### 5.2 Coding standards
+
+- Keep clean Python style (PEP 8)
+- Document functions and modules
+- Avoid hardcoded credentials
+- Use existing layers: `core.async_lib` for async logic, `core.backend` for API
+
+### 5.3 Recommended checks
+
+```bash
+pip install black flake8
+black .
+flake8 src
+```
+
+## 6. Tests
+
+### 6.1 Run test suite
+
+```bash
+cd src
+python -m unittest discover -s tests -p "test_*.py"
+```
+
+### 6.2 Included tests
+
+- `src/tests/test_collector.py` – event validation
+- `src/tests/test_alert_manager.py` – alert threshold and validation
+- `src/tests/test_integration.py` – pipeline integration
+- `src/tests/test_processor.py` – processor validator wrapper
+
+## 7. License
+
+MIT License. See [LICENSE](LICENSE).
+
+## 8. Recommended badges
+
+Add these badges in the top README line(s), replacing owner/repo and workflow names:
+
+- Build: `https://img.shields.io/github/actions/workflow/status/<owner>/<repo>/ci.yml`
+- Coverage: `https://img.shields.io/codecov/c/gh/<owner>/<repo>`
+- Version: `https://img.shields.io/github/v/tag/<owner>/<repo>`
+- GitHub Actions: `https://img.shields.io/github/actions/workflow/status/<owner>/<repo>/deploy.yml`
+
+## 9. Project structure
+
+```
+3v3nTr4cer/
+├── CONTRIBUTING.md
+├── LICENSE
+├── README.md
+├── db/
+│   ├── commands/
+│   └── init/V1_schema_dev.sql
+├── deploy/
+│   ├── compose.yml
+│   ├── requirements.txt
+│   └── docker/
+│       ├── AlertEngine.Dockerfile
+│       ├── Backend.Dockerfile
+│       ├── Collector.Dockerfile
+│       └── Processor.Dockerfile
+├── setup.sh
+└── src/
+    ├── core/
+    │   ├── async_lib/
+    │   │   ├── alert_engine/
+    │   │   ├── collector/
+    │   │   └── processor/
+    │   ├── backend/
+    │   ├── db/
+    │   └── logs/
+    ├── processor/
+    └── tests/
+```
+
