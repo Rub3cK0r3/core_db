@@ -4,38 +4,59 @@
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-in%20development-orange)
 
-<<<<<<< HEAD
-## 1. Project name and overview
+> CLI-first system for backend event ingestion, processing, and alerting with a focus on security and auditability.
 
-**3v3nTr4cer** is a sentinel-style, backend-first event pipeline framework built in Python. It ships with:
-=======
 `3v3nTr4cer` is a **backend-first framework** for handling **event-pipelines** in Python. It enables collecting events from enterprise systems, processing them asynchronously, storing secure logs, and generating alerts — all from the command line. Designed to be secure, deployable via Docker, with full traceability for auditing.
->>>>>>> a003c926acac6a2fe53d4e1637ca3685fc8e87fc
 
-- REST API with FastAPI and JWT authentication
-- Asynchronous collector, processor and alert engine
-- PostgreSQL persistence for events and alerts
-- Event normalization, rules-based alerting and audit logs
-- Docker Compose orchestrator for full stack deployment
+---
 
-The system is designed for security, traceability and auditability, suitable for log-based monitoring and SIEM-style setups.
+## 📋 Table of Contents
 
-## 2. Technologies used
+- [Features](#-features)
+- [Requirements](#-requirements)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Usage Examples](#-usage-examples)
+- [Project Structure](#-project-structure)
+- [Configuration](#-configuration)
+- [Contributing](#-contributing)
+- [Security](#-security)
+- [License](#-license)
 
-- Python 3.11+ (project code), Python 3.12 in Docker images
-- FastAPI, Uvicorn
-- SQLModel, SQLAlchemy
-- PostgreSQL
-- asyncpg, httpx
-- python-jose (JWT), passlib[bcrypt]
-- python-dotenv
-- pydantic
-- Docker, Docker Compose
-- Unit tests with built-in `unittest` and `unittest.mock`
+---
 
-## 3. Installation step-by-step
+## ✨ Features
 
-### 3.1 Clone repository
+- **Asynchronous Event Ingestion** – Reliable async event collection
+- **Event Normalization & Processing** – Transform and process events in real-time
+- **Secure PostgreSQL Storage** – Tamper-evident logging with SQLAlchemy/SQLModel
+- **Configurable Alert Engine** – CLI alerts, email simulation, SIEM hooks
+- **RBAC on All Endpoints** – Role-based access control built-in
+- **Docker & Kubernetes Ready** – Deploy with Docker Compose or K8s
+- **Security-First Design** – Pentesting and hardening from day one
+
+---
+
+## 📋 Requirements
+
+### System Requirements
+
+- **Python**: 3.11 or higher
+- **PostgreSQL**: 14 or higher (or use Docker)
+- **Docker**: 20.10+ (optional, for containerized deployment)
+- **Docker Compose**: 2.0+ (optional)
+
+### Supported Platforms
+
+- Linux (Ubuntu 20.04+, Debian 11+, CentOS 8+)
+- macOS (12.0+)
+- Windows 10/11 (with WSL2 recommended)
+
+---
+
+## 🚀 Installation
+
+### Option 1: Local Installation
 
 ```bash
 git clone https://github.com/Rub3cK0r3/3v3nTr4cer.git
