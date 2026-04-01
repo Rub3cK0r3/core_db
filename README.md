@@ -4,9 +4,13 @@
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-in%20development-orange)
 
+<<<<<<< HEAD
 ## 1. Project name and overview
 
 **3v3nTr4cer** is a sentinel-style, backend-first event pipeline framework built in Python. It ships with:
+=======
+`3v3nTr4cer` is a **backend-first framework** for handling **event-pipelines** in Python. It enables collecting events from enterprise systems, processing them asynchronously, storing secure logs, and generating alerts — all from the command line. Designed to be secure, deployable via Docker, with full traceability for auditing.
+>>>>>>> a003c926acac6a2fe53d4e1637ca3685fc8e87fc
 
 - REST API with FastAPI and JWT authentication
 - Asynchronous collector, processor and alert engine
