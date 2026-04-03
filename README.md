@@ -267,4 +267,8 @@ MIT License. See [LICENSE](LICENSE).
     ├── processor/
     └── tests/
 ```
-
+## Next Steps 🏆
+We now have a **functional MVP**. 
+The next steps will focus on making it 
+work **independently** and eventually **developing**
+multiple __fully functional, "market-ready" products__.
