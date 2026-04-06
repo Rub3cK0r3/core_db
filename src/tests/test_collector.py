@@ -1,5 +1,6 @@
 import unittest
-from core.async_lib.collector.main import AsyncCollector, REQUIRED_EVENT_FIELDS
+from core.async_lib.collector.main import AsyncCollector
+from contracts.events import REQUIRED_EVENT_FIELDS
 class TestCollectorValidation(unittest.TestCase):
     def test_validate_event_success(self):
         # db_dsn is required by the async implementation but unused for validation
