@@ -9,15 +9,9 @@ from uuid import uuid4
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
-# from models.models import User, Event, Alert
-# from models.schemas import EventResponse, EventCreate
-# from models.base import Base
-
 from contracts.base_model import Base
 from contracts.events import Event,User,EventCreate,EventResponse
 from contracts.alerts import Alert
-
 from database import engine
 # services defined in events_service.py
 from events_service import (
