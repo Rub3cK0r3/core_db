@@ -13,6 +13,9 @@ from typing import Dict, Optional
 from pydantic import BaseModel
 from .base_model import Base
 
+# In order to be able to do Sanity checks 
+REQUIRED_EVENT_FIELDS = ["id", "app_name", "type", "payload"]
+
 class Event(Base):
     __tablename__ = "events"
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
@@ -103,5 +106,3 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-
-

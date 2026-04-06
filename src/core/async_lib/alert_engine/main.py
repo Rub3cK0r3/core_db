@@ -4,17 +4,7 @@ import asyncpg
 import httpx
 
 # Sanity checks in this frontier too...
-REQUIRED_ALERT_FIELDS = ["id", "severity", "resource"]
-
-# Severity ordering for threshold-based alerting
-SEVERITY_LEVELS = {
-    "debug": 10,
-    "info": 20,
-    "warning": 30,
-    "error": 40,
-    "fatal": 50,
-}
-
+from contracts.alerts import REQUIRED_ALERT_FIELDS,SEVERITY_LEVELS
 
 class AlertManager:
     # Handles asynchronous processing of alert events.
