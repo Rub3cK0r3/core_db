@@ -1,8 +1,12 @@
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from models.models import Event, Alert
-from models.schemas import EventCreate
+
+from contracts.events import Event,EventCreate
+from contracts.alerts import Alert
+# from models.models import Event, Alert
+# from models.schemas import EventCreate
+
 # Optional sanity checks
 ALERT_SEVERITIES = {"error", "fatal"}
 
