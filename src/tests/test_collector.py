@@ -7,6 +7,8 @@ class TestCollectorValidation(unittest.TestCase):
         collector = AsyncCollector(db_dsn="postgresql://user:pass@localhost:5432/testdb")
 
         valid_event = {
+            "id": "evt-123",
+            "app_name": "my_service",
             "type": "test_event",
             "payload": {"foo": "bar"},
         }
