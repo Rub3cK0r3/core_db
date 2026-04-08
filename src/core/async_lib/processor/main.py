@@ -1,11 +1,8 @@
 import os
-
 import asyncpg
 import httpx
-
 # Sanity checks in this frontier too...
 from contracts.events import REQUIRED_EVENT_FIELDS
-
 class EventProcessor: 
     # Handles business logic for processing events asynchronously.
     #

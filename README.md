@@ -239,34 +239,32 @@ MIT License. See [LICENSE](LICENSE).
 ## 8. Project structure
 
 ```
-3v3nTr4cer/
+.
 ├── CONTRIBUTING.md
+├── db
+│   ├── commands
+│   └── init
+├── deploy
+│   ├── compose.yml
+│   ├── docker
+│   └── requirements.txt
+├── installer.sh
 ├── LICENSE
+├── logs.txt
 ├── README.md
-├── db/
-│   ├── commands/
-│   └── init/V1_schema_dev.sql
-├── deploy/
-│   ├── compose.yml
-│   ├── requirements.txt
-│   └── docker/
-│       ├── AlertEngine.Dockerfile
-│       ├── Backend.Dockerfile
-│       ├── Collector.Dockerfile
-│       └── Processor.Dockerfile
 ├── setup.sh
-└── src/
-    ├── core/
-    │   ├── async_lib/
-    │   │   ├── alert_engine/
-    │   │   ├── collector/
-    │   │   └── processor/
-    │   ├── backend/
-    │   ├── db/
-    │   └── logs/
-    ├── processor/
-    └── tests/
+├── src
+│   ├── alert_engine
+│   ├── collector
+│   ├── contracts
+│   ├── core
+│   ├── processor
+│   └── tests
+└── systemd
+    ├── 3v3nTr4cer.service
+    └── setup.sh
 ```
+
 ## Next Steps 🏆
 We now have a **functional MVP**. 
 The next steps will focus on making it 

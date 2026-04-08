@@ -22,7 +22,7 @@ class TestCollectorValidation(unittest.TestCase):
             "type": "test_event",
         }
 
-        # Missing required "payload" field
+        # Missing required fields
         self.assertFalse(collector._validate_event(invalid_event))
 
     def test_required_event_fields_constant(self):
