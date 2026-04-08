@@ -1,11 +1,8 @@
 import os
-
 import asyncpg
 import httpx
-
 # Sanity checks in this frontier too...
 from contracts.alerts import REQUIRED_ALERT_FIELDS,SEVERITY_LEVELS
-
 class AlertManager:
     # Handles asynchronous processing of alert events.
     # Responsibilities:
